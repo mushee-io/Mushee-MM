@@ -1,7 +1,7 @@
 import { authorise, presentedApiKey } from "../lib/auth.js";
 import { recentTicks, hasDatabase } from "../lib/storage.js";
 import { listMarkets, resolveMarket, boundedNumber } from "../lib/catalog.js";
-import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence } from "../lib/market.js";
+import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence, getExecutionIntelligence } from "../lib/market.js";
 import { generateCommentary } from "../lib/ai.js";
 import { cached } from "../lib/cache.js";
 
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
   if (path === "/api/v1/health") {
     return send(res, 200, {
-      service: "Mushee Market Data Network", status: "running", version: "0.2.0",
+      service: "Mushee Market Data Network", status: "running", version: "0.3.0",
       startedAt: STARTED, upstreamChecked: false,
       note: "Health confirms the API process is running, not upstream availability."
     });
@@ -50,7 +50,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const permission = await authorise(presentedApiKey(req.headers));
+    const scope = path === "/api/v1/price" ? "price" :
+      ["/api/v1/orderbook","/api/v1/liquidity","/api/v1/execution-intelligence"].includes(path) ? "depth" :
+      ["/api/v1/history","/api/v1/ticks"].includes(path) ? "history" :
+      path === "/api/v1/intelligence" ? "intelligence" : null;
+    const permission = await authorise(presentedApiKey(req.headers),{scope});
     if (!permission.ok) return send(res, permission.code, {error:permission.error});
   } catch {
     return send(res,503,{error:"AUTH_BACKEND_UNAVAILABLE",
@@ -59,7 +63,7 @@ export default async function handler(req, res) {
 
   const endpoints = new Set([
     "/api/v1/price", "/api/v1/orderbook", "/api/v1/liquidity",
-    "/api/v1/history", "/api/v1/intelligence", "/api/v1/ticks"
+    "/api/v1/history", "/api/v1/intelligence", "/api/v1/ticks", "/api/v1/execution-intelligence"
   ]);
   if (!endpoints.has(path)) {
     return send(res, 404, { error: "NOT_FOUND", endpoints: [
@@ -88,6 +92,15 @@ export default async function handler(req, res) {
       if (notional === null) return send(res, 400, { error: "INVALID_NOTIONAL" });
       if (depth === null || !Number.isInteger(depth)) return send(res, 400, { error: "INVALID_DEPTH" });
       return send(res, 200, await getLiquidity(market, side, notional, depth));
+    }
+    if (path === "/api/v1/execution-intelligence") {
+      const side = url.searchParams.get("side") || "buy";
+      const notional = boundedNumber(url.searchParams.get("notional"),100000,1,1000000);
+      const depth = boundedNumber(url.searchParams.get("depth"),50,1,50);
+      if (!["buy","sell"].includes(side)) return send(res,400,{error:"INVALID_SIDE"});
+      if (notional === null) return send(res,400,{error:"INVALID_NOTIONAL"});
+      if (depth === null || !Number.isInteger(depth)) return send(res,400,{error:"INVALID_DEPTH"});
+      return send(res,200,await getExecutionIntelligence(market,side,notional,depth));
     }
     if (path === "/api/v1/ticks") {
       const limit = boundedNumber(url.searchParams.get("limit"), 100, 1, 500);

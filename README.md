@@ -1,8 +1,25 @@
 # Mushee Market Data Network (MDN)
 
-AI-ready, blockchain-independent institutional market-data API from Mushee. **Milestone 1** delivers a live REST market-data MVP. **Milestone 2A** adds a dedicated WebSocket collector, optional PostgreSQL tick history and tenant-scoped API access. Long term: licensed multi-asset data, enterprise SLA-backed feeds, independently attested oracle updates and differentiated AI market intelligence.
+AI-ready, blockchain-independent institutional market-data API from Mushee. **Milestone 1** delivers a live REST market-data MVP. **Milestone 2A** adds a dedicated WebSocket collector, optional PostgreSQL tick history and tenant-scoped API access. **Milestone 2B** introduces source freshness checks, scoped API access, execution-intelligence metrics and maintenance utilities. Long term: licensed multi-asset data, enterprise SLA-backed feeds, independently attested oracle updates and differentiated AI market intelligence.
 
 **Status: development MVP. Not a production-grade oracle, licensed data redistribution service, regulated benchmark or decentralised validator network. Do not use it to settle positions or liquidate collateral.**
+
+## Milestone 2B — Institutional data quality and permissions
+
+- Exchange observations must be fresh (default 15 seconds). Invalid, stale or implausibly future-dated observations are excluded; if all are rejected, the API returns 503 instead of fabricating prices.
+- Price disagreement above 50 basis points changes reference status to `disputed`, even with two sources. Such prices must NOT be used for liquidation or settlement.
+- New `GET /api/v1/execution-intelligence?symbol=ETH-USD&side=buy&notional=100000` returns venue bid/ask spreads, total displayed bid/ask depth, book imbalance, inter-venue price dispersion, concentration, indicative VWAP/slippage and explicit caution flags.
+- All execution signals are transparent **descriptive statistical heuristics**, not a trained AI model or execution guarantee.
+- Database-backed API keys include scopes: `price`, `depth`, `history`, `intelligence`, `stream`. Legacy pre-migration tenant keys acquire the default full scope; review and rotate old keys before production.
+- `npm run migrate` applies both schema migrations in order, including the new scopes and retention index.
+- Example restricted account: `npm run tenant -- --name=Firm --plan=growth --scopes=price,history --limit=120`.
+- Revoke a stored key using its 17-character prefix: `npm run revoke -- --prefix=mm_live_123456789 --dry-run`; remove `--dry-run` after verification.
+- Bounded tick cleanup: `RETENTION_DAYS=30 npm run retention -- --dry-run`; omit `--dry-run` to remove one bounded batch. Run periodically on a trusted scheduler and back up records before deleting.
+- Persistence now retries a bounded batch after a transient DB error; queue overflow is reported. Not exactly-once delivery or a substitute for durable messaging.
+
+### What remains before selling to institutions
+
+Source redistribution agreements, per-tenant invoices/billing, provider sequence-gap detection, independently benchmarked predictive models, tracing and alerting, SSL termination for the stream endpoint, distributed durable messaging, continuous multiregion operations, external security audit, and independent decentralised oracle nodes.
 
 ## Milestone 2A — streaming and institutional API foundations
 
@@ -51,7 +68,7 @@ This endpoint returns actual persisted WebSocket observations; when no DB is con
 
 ## Local development
 
-Requires Node 20+ and no third-party npm packages.
+Requires Node 20+; `npm install` installs the `pg` and `ws` runtime dependencies.
 
     npm install
     npm start
@@ -73,6 +90,7 @@ The local development server does not automatically load .env files. Use shell e
 | GET /api/v1/history | symbol=ETH-USD&granularity=3600&limit=48 | Real Coinbase OHLCV candles |
 | GET /api/v1/intelligence | symbol=SOL-USD | Historical risk metrics and optional AI commentary |
 | GET /api/v1/ticks | symbol=BTC-USD&limit=100 | Persisted streaming tick observations; DATABASE_URL required |
+| GET /api/v1/execution-intelligence | symbol=ETH-USD&side=buy&notional=100000 | Descriptive liquidity and market-quality signals |
 
     curl 'http://localhost:3000/api/v1/price?symbol=BTC-USD'
     curl 'http://localhost:3000/api/v1/liquidity?symbol=ETH-USD&side=buy&notional=100000'
@@ -109,7 +127,7 @@ No paid data-provider credentials are needed for the public crypto sandbox. Exch
 ## Roadmap
 
 - **M1 (this branch):** live crypto spot API, order books, historical data, early analytics, optional AI commentary, tests, public dashboard and Vercel scaffold.
-- **M2A (this branch):** streaming ingress/egress, optional durable tick history, tenant-scoped hashed API keys and atomic request limits. **M2B (remaining):** sequence-gap tracking, multi-region redundancy, subscriptions billing, entitlement policies, full observability and retention automation.
+- **M2A (complete):** streaming ingress/egress, optional durable tick history, tenant-scoped hashed API keys and atomic request limits. **M2B (partial):** freshness filtering, scoped API keys, indicative execution-intelligence signals, key revocation and manual retention. Remaining: sequence gaps, redundant collectors, subscription billing, observability and automated retention.
 - **M3:** validated proprietary liquidity models and differentiated AI risk datasets with transparent backtesting.
 - **M4:** independent oracle publishers and validator operators, signed update commitments, onchain proof verification, slashing/disputes and governance.
 - **M5:** commercially licensed equities, FX, commodities, rates, derivatives and RWA datasets.

@@ -80,3 +80,11 @@ test("persistent tick endpoint has an explicit not-configured state", async () =
     else process.env.API_KEY=key;
   }
 });
+
+
+test("execution intelligence invalid side rejected", async () => {
+  await withServer(async(base)=>{
+    const r=await fetch(base+"/api/v1/execution-intelligence?symbol=BTC-USD&side=bad");
+    assert.equal(r.status,400);assert.equal((await r.json()).error,"INVALID_SIDE");
+  });
+});

@@ -24,7 +24,7 @@ test("price aggregation flags divergences and degraded provider coverage", () =>
   const price = aggregateTicker(sources, "BTC-USD");
   assert.equal(price.price, 105);
   assert.equal(price.divergenceAlert, true);
-  assert.equal(price.status, "normal");
+  assert.equal(price.status, "disputed");
   const degraded = aggregateTicker([sources[0]], "BTC-USD");
   assert.equal(degraded.status, "degraded");
 });
@@ -75,4 +75,10 @@ test("statistical intelligence never labels itself a forecast", () => {
   assert.ok(analysis.annualisedRealisedVolatilityPct > 0);
   assert.ok(analysis.flags.includes("SINGLE_DATA_SOURCE"));
   assert.ok(analysis.disclaimer.includes("not a forecast"));
+});
+
+
+test("consistent prices retain normal status", () => {
+  const p=aggregateTicker([{provider:"one",last:100},{provider:"two",last:100.02}],"BTC-USD");
+  assert.equal(p.status,"normal");assert.equal(p.divergenceAlert,false);
 });

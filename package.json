@@ -1,6 +1,6 @@
 {
   "name": "mushee-market-data",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Mushee Market Data Network — real-time institutional data infrastructure",
@@ -13,7 +13,9 @@
     "migrate": "node scripts/migrate.js",
     "tenant": "node scripts/create-tenant.js",
     "test": "node --test",
-    "check": "node --check api/index.js && node --check server.js && node --check lib/catalog.js && node --check lib/providers.js && node --check lib/analytics.js && node --check lib/market.js && node --check lib/ai.js && node --check lib/storage.js && node --check lib/auth.js && node --check lib/streaming.js && node --check services/streamer.js && node --check scripts/create-tenant.js && node --check scripts/migrate.js"
+    "check": "node --check api/index.js && node --check server.js && node --check lib/catalog.js && node --check lib/providers.js && node --check lib/analytics.js && node --check lib/market.js && node --check lib/ai.js && node --check lib/storage.js && node --check lib/auth.js && node --check lib/streaming.js && node --check services/streamer.js && node --check scripts/create-tenant.js && node --check scripts/migrate.js && node --check lib/quality.js && node --check lib/execution.js && node --check scripts/revoke-key.js && node --check scripts/retention.js",
+    "retention": "node scripts/retention.js",
+    "revoke": "node scripts/revoke-key.js"
   },
   "dependencies": {
     "pg": "^8.13.1",
