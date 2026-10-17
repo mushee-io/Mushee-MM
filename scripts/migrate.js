@@ -5,9 +5,12 @@ import { getPool, closePool, hasDatabase } from "../lib/storage.js";
 if (!hasDatabase()) { console.error("DATABASE_URL is required"); process.exitCode = 1; }
 else {
   try {
-    const filename = fileURLToPath(new URL("../sql/001_market_data.sql", import.meta.url));
-    const ddl = await readFile(filename, "utf8");
-    await getPool().query(ddl);
+    for (const migration of ["001_market_data.sql","002_entitlements.sql"]) {
+      const filename = fileURLToPath(new URL("../sql/" + migration, import.meta.url));
+      const ddl = await readFile(filename,"utf8");
+      await getPool().query(ddl);
+      console.log("Applied",migration);
+    }
     console.log("Market data schema migration completed.");
   } catch (error) {
     console.error("Migration failed:", error.message);

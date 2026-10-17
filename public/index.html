@@ -232,8 +232,8 @@ Accept: application/json
         show("sources", v.sourceCount + " venue" + (v.sourceCount === 1 ? "" : "s") + " · " + (v.status || "unknown"));
         show("observed", "Observed " + new Date(v.observedAt).toLocaleTimeString());
         show("source-status", v.sourceCount + " / 2 exchange sources reporting");
-        el("source-dot").style.background = v.sourceCount >= 2 ? "#a4f6b2" : "#eec68b";
-        if (v.divergenceAlert) show("error", "Warning: source prices diverge");
+        el("source-dot").style.background = v.status === "normal" ? "#a4f6b2" : "#eec68b";
+        if (v.divergenceAlert) show("error", "Warning: source prices diverge; reference is disputed");
       } else {
         show("price", "—"); show("sources", "Sources unavailable"); show("observed", "—");
         show("source-status", "Price sources unavailable");

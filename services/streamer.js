@@ -65,8 +65,11 @@ async function flushTicks() {
   const batch = tickBuffer.splice(0, 100);
   try { await insertTicks(batch); }
   catch (error) {
-    droppedTicks += batch.length;
-    console.error("[stream] persistence failure:",error.message);
+    // Requeue at the front after transient DB errors; fail visibly if capacity exhausted.
+    const free = Math.max(0,MAX_QUEUE-tickBuffer.length);
+    if (free < batch.length) droppedTicks += batch.length-free;
+    tickBuffer.unshift(...batch.slice(0,free));
+    console.error("[stream] persistence failure (retry queued):",error.message);
   }
   finally { flushing = false; }
 }
@@ -129,7 +132,7 @@ httpServer.on("upgrade",async (req,socket,head) => {
     return;
   }
   try {
-    const permission = await authorise(presentedApiKey(req.headers));
+    const permission = await authorise(presentedApiKey(req.headers),{scope:"stream"});
     if (!permission.ok) {
       socket.end("HTTP/1.1 "+permission.code+" Access Denied\r\nConnection: close\r\n\r\n");
       return;
@@ -146,7 +149,7 @@ httpServer.on("upgrade",async (req,socket,head) => {
 });
 wss.on("connection",(client) => {
   clients.add(client);
-  send(client,{type:"hello",message:"Subscribe with a JSON message containing type=subscribe and symbols array.",version:"0.2.0"});
+  send(client,{type:"hello",message:"Subscribe with a JSON message containing type=subscribe and symbols array.",version:"0.3.0"});
   client.on("pong",() => {client.isAlive = true;});
   client.on("message",(raw) => {
     const subscriptions = parseSubscription(raw.toString());
