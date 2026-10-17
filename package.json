@@ -1,0 +1,15 @@
+{
+  "name": "mushee-market-data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mushee Market Data Network — institutional market-data and oracle API MVP",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "node --check api/index.js && node --check server.js && node --check lib/catalog.js && node --check lib/providers.js && node --check lib/analytics.js && node --check lib/market.js && node --check lib/ai.js"
+  }
+}
