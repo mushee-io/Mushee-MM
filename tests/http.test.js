@@ -60,3 +60,23 @@ test("configured API key protects data routes", async () => {
     else process.env.API_KEY = previous;
   }
 });
+
+
+test("persistent tick endpoint has an explicit not-configured state", async () => {
+  const db = process.env.DATABASE_URL;
+  const key = process.env.API_KEY;
+  delete process.env.DATABASE_URL;
+  delete process.env.API_KEY;
+  try {
+    await withServer(async (base) => {
+      const response = await fetch(base + "/api/v1/ticks?symbol=BTC-USD");
+      assert.equal(response.status,503);
+      assert.equal((await response.json()).error,"HISTORY_NOT_CONFIGURED");
+    });
+  } finally {
+    if (db === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL=db;
+    if (key === undefined) delete process.env.API_KEY;
+    else process.env.API_KEY=key;
+  }
+});
