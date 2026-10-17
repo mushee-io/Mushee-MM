@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08121b">
+  <meta name="description" content="Mushee Market Data Network — verifiable financial data and intelligent market analytics APIs.">
+  <title>Mushee MM — Institutional Market Data Infrastructure</title>
+  <style>
+    :root { color-scheme:dark; --bg:#08121b; --panel:#101f2a; --panel2:#152532; --line:#284050; --ink:#eaf2f6; --muted:#97aab9; --bright:#a4f6b2; --aqua:#66d5c1; --red:#ffacaa; --radius:16px }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:radial-gradient(circle at 76% 5%, #143039 0, transparent 33%), var(--bg);color:var(--ink);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .wrap{max-width:1220px;margin:0 auto;padding:0 28px}
+    .top{display:flex;align-items:center;justify-content:space-between;padding:25px 0;border-bottom:1px solid #243845}
+    .brand{display:inline-flex;gap:12px;align-items:center;letter-spacing:.02em;font-size:15px;font-weight:750}
+    .logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid #4a806a;border-radius:10px;color:var(--bright);font-weight:900;font-size:19px;background:#123024}
+    .nav{display:flex;gap:24px;align-items:center;color:#b8c8d1;font-size:13px}
+    .nav a:hover{color:var(--bright)}
+    .toplink{border:1px solid #436257;border-radius:9px;padding:9px 14px;color:#d9f8df!important}
+    .hero{padding:81px 0 62px;max-width:940px}
+    .kicker{display:inline-flex;align-items:center;gap:8px;color:var(--bright);font-size:11px;letter-spacing:.17em;text-transform:uppercase;font-weight:800}
+    .dot{width:7px;height:7px;background:var(--bright);border-radius:50%;box-shadow:0 0 0 4px #a4f6b21a}
+    h1{font-size:clamp(39px,5.5vw,73px);line-height:1.05;letter-spacing:-.055em;margin:18px 0 23px;max-width:950px;font-weight:720}
+    h1 span{color:var(--bright)}
+    .lead{font-size:18px;color:#afc1cd;line-height:1.75;max-width:780px;margin:0}
+    .pills{display:flex;flex-wrap:wrap;gap:9px;margin:28px 0 0}
+    .pill{padding:7px 11px;font-size:12px;color:#b8e5d5;border:1px solid #2d564f;background:#112e2d;border-radius:9px}
+    .section-head{display:flex;align-items:end;justify-content:space-between;margin:23px 0 19px;gap:14px}
+    .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:var(--aqua);font-weight:800}
+    h2{font-size:29px;letter-spacing:-.03em;line-height:1.2;margin:5px 0 0}
+    .small{font-size:12px;color:var(--muted)}
+    .status{display:inline-flex;align-items:center;gap:8px;border:1px solid #3b4f5a;padding:8px 11px;border-radius:999px;font-size:12px;color:var(--muted)}
+    .console{background:#0d1b25;border:1px solid #314858;border-radius:19px;overflow:hidden;box-shadow:0 28px 65px #0003}
+    .console-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#142530;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap}
+    .switch{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .switch button{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 16px;border-radius:9px;font-size:13px;font-weight:700}
+    .switch button.active{background:#284238;color:var(--bright);border-color:#476c54}
+    .refresh{background:#193127;border:1px solid #446b54;color:var(--bright);padding:8px 13px;border-radius:9px}
+    .console-body{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr)}
+    .chart-area{padding:28px;border-right:1px solid var(--line)}
+    .price-label{color:var(--muted);font-size:12px;margin:0 0 8px}
+    .big-price{font-size:clamp(32px,4vw,48px);font-weight:720;letter-spacing:-.04em;line-height:1.1}
+    .current{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+    .change{font-size:12px;color:var(--muted)}
+    .meta-line{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:13px 0}
+    .chart{width:100%;height:223px;margin:8px 0 0;display:block}
+    .chart path{vector-effect:non-scaling-stroke}
+    .chart-label{display:flex;justify-content:space-between;color:#849eae;font-size:11px}
+    .side-panel{padding:25px}
+    .side-panel h3{font-size:13px;font-weight:750;letter-spacing:.02em;margin:0 0 20px}
+    .metric{padding:13px 0;border-bottom:1px solid #28404d}
+    .metric:last-child{border:0}
+    .metric-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+    .metric-value{font-size:23px;letter-spacing:-.03em;margin-top:6px;font-weight:700}
+    .action-panel{margin-top:14px;padding:19px 22px;border-top:1px solid var(--line);background:#11232d;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .action-panel label{color:var(--muted);font-size:12px;display:flex;align-items:center;gap:10px}
+    select,input{background:#071720;border:1px solid #365060;color:var(--ink);border-radius:8px;padding:9px 10px}
+    input{width:135px}
+    .action-panel .spacer{flex:1}
+    .alert{font-size:12px;color:#eebfa7;min-height:18px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0 60px}
+    .card{background:var(--panel);border:1px solid #2a4351;border-radius:var(--radius);padding:22px}
+    .card .num{font-size:12px;color:var(--bright);font-weight:750}
+    .card h3{font-size:19px;letter-spacing:-.02em;margin:12px 0 8px}
+    .card p{margin:0;font-size:13px;color:#a8bbc6}
+    .docs{padding-bottom:78px}
+    .docs-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}
+    .endpoint{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0;border-bottom:1px solid #2d4552;font-size:13px}
+    .endpoint:last-child{border:0}
+    .method{font-size:10px;background:#1c3b32;color:var(--bright);border-radius:5px;padding:4px 6px;margin-right:8px;font-weight:800}
+    code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    .codebox{border:1px solid #2c4755;border-radius:14px;background:#06141d;overflow:hidden}
+    .codehead{padding:11px 16px;border-bottom:1px solid #274250;color:var(--aqua);font-size:11px;letter-spacing:.08em;font-weight:700}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.9;margin:0;padding:17px;color:#c4f0dc}
+    .note{font-size:12px;color:var(--muted);margin:20px 0}
+    .footer{border-top:1px solid #253e4b;padding:24px 0 40px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    @media(max-width:780px){.nav{gap:12px}.nav a:nth-child(1){display:none}.hero{padding:55px 0 43px}.console-body{grid-template-columns:1fr}.chart-area{border-right:none;border-bottom:1px solid var(--line)}.cards,.docs-grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.wrap{padding:0 18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a href="/" class="brand"><span class="logo">M</span><span>MUSHEE <span style="color:var(--bright)">/ MM</span></span></a>
+      <nav class="nav"><a href="#terminal">Market terminal</a><a href="#products">Products</a><a href="#developers">Developers</a><a href="https://github.com/mushee-io/Mushee-MM" class="toplink" target="_blank" rel="noopener">GitHub ↗</a></nav>
+    </header>
+    <section class="hero">
+      <div class="kicker"><span class="dot"></span> THE FINANCIAL DATA LAYER FOR MACHINES</div>
+      <h1>Market intelligence.<br><span>Built for what comes next.</span></h1>
+      <p class="lead">Real market data, liquidity analytics and machine-readable intelligence. One API for trading platforms, risk engines and financial AI agents.</p>
+      <div class="pills"><span class="pill">MULTI-SOURCE PRICING</span><span class="pill">ORDER-BOOK LIQUIDITY</span><span class="pill">HISTORICAL OHLCV</span><span class="pill">AI-READY API</span></div>
+    </section>
+
+    <section id="terminal">
+      <div class="section-head">
+        <div><div class="eyebrow">Development network / v0.1</div><h2>Live market terminal</h2></div>
+        <div class="status"><span class="dot" id="source-dot" style="background:#9aa6ac;box-shadow:none"></span><span id="source-status">Checking exchange sources…</span></div>
+      </div>
+      <div class="console">
+        <div class="console-header">
+          <div class="switch" aria-label="Select market">
+            <button class="active" data-symbol="BTC-USD" aria-pressed="true">BTC / USD</button>
+            <button data-symbol="ETH-USD" aria-pressed="false">ETH / USD</button>
+            <button data-symbol="SOL-USD" aria-pressed="false">SOL / USD</button>
+          </div>
+          <button class="refresh" id="refresh" type="button">↻ Refresh data</button>
+        </div>
+        <div class="console-body">
+          <div class="chart-area">
+            <p class="price-label" id="price-label">BTC / USD · Indicative spot reference</p>
+            <div class="current"><div class="big-price" id="price">—</div><div class="change" id="period-change">48-hour change —</div></div>
+            <div class="meta-line"><span id="sources">Sources: —</span><span id="observed">Last observed: —</span></div>
+            <svg class="chart" viewBox="0 0 680 220" role="img" aria-label="Recent market price chart from actual historical exchange candles" preserveAspectRatio="none">
+              <line x1="0" y1="53" x2="680" y2="53" stroke="#2b4857" stroke-dasharray="4 6"/>
+              <line x1="0" y1="108" x2="680" y2="108" stroke="#2b4857" stroke-dasharray="4 6"/>
+              <line x1="0" y1="163" x2="680" y2="163" stroke="#2b4857" stroke-dasharray="4 6"/>
+              <path id="chart-path" fill="none" stroke="#a4f6b2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
+            </svg>
+            <div class="chart-label"><span>Recent observed candles</span><span>Source: Coinbase Exchange</span></div>
+          </div>
+          <div class="side-panel">
+            <h3>LIQUIDITY ENGINE <span class="small" style="font-weight:400">· indicative</span></h3>
+            <div class="metric"><div class="metric-row"><span>Estimated VWAP</span><span id="fill">—</span></div><div class="metric-value" id="vwap">—</div></div>
+            <div class="metric"><div class="metric-row"><span>Estimated slippage</span><span>Basis points</span></div><div class="metric-value" id="slippage">—</div></div>
+            <div class="metric"><div class="metric-row"><span>Market volatility (historical)</span><span>Annualised</span></div><div class="metric-value" id="volatility">—</div></div>
+            <div class="metric"><div class="metric-row"><span>Market-data assessment</span><span id="intelligence-mode">Statistical</span></div><div class="small" style="margin-top:8px" id="market-note">Awaiting market data…</div></div>
+          </div>
+        </div>
+        <div class="action-panel">
+          <label>Order side <select id="side"><option value="buy">Buy</option><option value="sell">Sell</option></select></label>
+          <label>Notional (USD) <input id="notional" type="number" min="1" max="1000000" value="100000" step="1000"></label>
+          <span class="spacer"></span>
+          <span class="alert" role="status" id="error"></span>
+        </div>
+      </div>
+      <p class="note">Development MVP using public exchange feeds. Values are observed and indicative, not actionable trading quotes. Data may be temporarily unavailable or subject to exchange restrictions. No decentralised validator network is live yet.</p>
+    </section>
+
+    <section id="products">
+      <div class="section-head"><div><div class="eyebrow">Our infrastructure</div><h2>One network. Multiple data products.</h2></div></div>
+      <div class="cards">
+        <article class="card"><div class="num">01 / LIVE</div><h3>Market Data API</h3><p>Real-time reference prices, cross-source provenance and market depth. Currently BTC, ETH and SOL against USD.</p></article>
+        <article class="card"><div class="num">02 / LIVE</div><h3>Liquidity Intelligence</h3><p>Multi-venue indicative execution costs, available depth and observable slippage from genuine order books.</p></article>
+        <article class="card"><div class="num">03 / EARLY ACCESS</div><h3>AI Risk Intelligence</h3><p>Statistical volatility and market anomaly signals, plus optional model-generated explanatory commentary.</p></article>
+      </div>
+    </section>
+
+    <section id="developers" class="docs">
+      <div class="section-head"><div><div class="eyebrow">For builders and institutions</div><h2>Integrate financial data in minutes.</h2></div></div>
+      <div class="docs-grid">
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px">API endpoints</div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/price</code></span><span class="small">Reference pricing</span></div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/orderbook</code></span><span class="small">Order-book depth</span></div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/liquidity</code></span><span class="small">Execution estimates</span></div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/history</code></span><span class="small">Historical candles</span></div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/intelligence</code></span><span class="small">Risk analytics</span></div>
+          <div class="endpoint"><span><span class="method">GET</span><code>/api/v1/markets</code></span><span class="small">Supported markets</span></div>
+        </div>
+        <div class="codebox">
+          <div class="codehead">REQUEST EXAMPLE · JSON REST</div>
+          <pre>GET /api/v1/price?symbol=BTC-USD
+Accept: application/json
+
+// The response contains actual exchange observations:
+// symbol, price, sourceCount, status,
+// divergenceAlert, sources, unavailable,
+// observedAt and methodology.</pre>
+        </div>
+      </div>
+    </section>
+    <footer class="footer"><span>© Mushee · Market Data Network</span><span>Development infrastructure · No synthetic pricing · Institutional licensing roadmap</span></footer>
+  </div>
+  <script>
+    const el = (id) => document.getElementById(id);
+    let selected = "BTC-USD";
+    let requestId = 0;
+    let waiting = false;
+    const usd = (n) => Number.isFinite(n) ? "$" + n.toLocaleString("en-US", {minimumFractionDigits:2,maximumFractionDigits: n < 1 ? 6 : 2}) : "—";
+    const number = (n, suffix) => Number.isFinite(n) ? n.toLocaleString("en-US", {maximumFractionDigits:2}) + suffix : "—";
+    const show = (id, value) => { el(id).textContent = value; };
+    const getJSON = async (endpoint) => {
+      const response = await fetch(endpoint, { headers: {Accept:"application/json"}, cache:"no-store" });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      return await response.json();
+    };
+
+    function drawChart(candles) {
+      const prices = candles.map((c) => Number(c.close)).filter(Number.isFinite);
+      if (prices.length < 2) { el("chart-path").setAttribute("d", ""); return; }
+      const low = Math.min(...prices);
+      const high = Math.max(...prices);
+      const range = Math.max(high - low, high * 0.00001);
+      const points = prices.map((p, i) => {
+        const x = i / (prices.length - 1) * 680;
+        const y = 198 - (p - low) / range * 175;
+        return (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      });
+      el("chart-path").setAttribute("d", points.join(" "));
+    }
+
+    async function refresh() {
+      if (waiting) return;
+      waiting = true;
+      const token = ++requestId;
+      const symbol = selected;
+      const notional = Number(el("notional").value);
+      const side = el("side").value;
+      const params = "?symbol=" + encodeURIComponent(symbol);
+      show("error", "");
+      show("source-status", "Fetching live sources…");
+      show("price-label", symbol.replace("-", " / ") + " · Indicative spot reference");
+      const operations = [
+        getJSON("/api/v1/price" + params),
+        getJSON("/api/v1/history" + params + "&granularity=3600&limit=48"),
+        getJSON("/api/v1/intelligence" + params)
+      ];
+      if (Number.isFinite(notional) && notional >= 1 && notional <= 1000000) {
+        operations.push(getJSON("/api/v1/liquidity" + params + "&side=" + side + "&notional=" + notional));
+      } else {
+        operations.push(Promise.reject(new Error("Enter a notional from $1 to $1,000,000")));
+      }
+      const results = await Promise.allSettled(operations);
+      if (token !== requestId) { waiting = false; return; }
+      const [price, history, intelligence, liquidity] = results;
+      if (price.status === "fulfilled") {
+        const v = price.value;
+        show("price", usd(v.price));
+        show("sources", v.sourceCount + " venue" + (v.sourceCount === 1 ? "" : "s") + " · " + (v.status || "unknown"));
+        show("observed", "Observed " + new Date(v.observedAt).toLocaleTimeString());
+        show("source-status", v.sourceCount + " / 2 exchange sources reporting");
+        el("source-dot").style.background = v.sourceCount >= 2 ? "#a4f6b2" : "#eec68b";
+        if (v.divergenceAlert) show("error", "Warning: source prices diverge");
+      } else {
+        show("price", "—"); show("sources", "Sources unavailable"); show("observed", "—");
+        show("source-status", "Price sources unavailable");
+        el("source-dot").style.background = "#ffacaa";
+        show("error", "Market API unavailable — check API access or exchange connectivity");
+      }
+      if (history.status === "fulfilled") {
+        drawChart(history.value.candles);
+        const candles = history.value.candles;
+        const first = candles[0]?.close;
+        const last = candles[candles.length - 1]?.close;
+        const change = first > 0 && last > 0 ? (last / first - 1) * 100 : null;
+        show("period-change", number(change, "%") + " observed period");
+      } else { drawChart([]); show("period-change", "Historical candles unavailable"); }
+      if (intelligence.status === "fulfilled") {
+        const v = intelligence.value;
+        show("volatility", number(v.annualisedRealisedVolatilityPct, "%"));
+        show("intelligence-mode", v.intelligence?.mode === "model-assisted" ? "AI commentary" : "Statistical");
+        show("market-note", v.intelligence?.summary || (v.flags.length ? v.flags.join(" · ") : "No configured alert thresholds exceeded in observed data."));
+      } else { show("volatility", "—"); show("market-note", "Risk data unavailable"); }
+      if (liquidity.status === "fulfilled") {
+        const v = liquidity.value;
+        show("vwap", usd(v.vwap));
+        show("slippage", number(v.estimatedSlippageBps, " bps"));
+        show("fill", number(v.fillRatio * 100, "% estimated fill"));
+      } else {
+        show("vwap", "—"); show("slippage", "—"); show("fill", "Data unavailable");
+        if (!Number.isFinite(notional) || notional < 1 || notional > 1000000) show("error", "Notional must be $1–$1,000,000");
+      }
+      waiting = false;
+    }
+
+    document.querySelectorAll("[data-symbol]").forEach((button) => button.addEventListener("click", () => {
+      selected = button.dataset.symbol;
+      document.querySelectorAll("[data-symbol]").forEach((item) => {
+        const active = item === button;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-pressed", String(active));
+      });
+      if (!waiting) refresh();
+      else { waiting = false; requestId++; refresh(); }
+    }));
+    el("refresh").addEventListener("click", refresh);
+    el("notional").addEventListener("change", refresh);
+    el("side").addEventListener("change", refresh);
+    refresh();
+    setInterval(refresh, 30000);
+  </script>
+</body>
+</html>
