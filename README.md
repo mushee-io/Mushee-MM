@@ -1,8 +1,44 @@
 # Mushee Market Data Network (MDN)
 
-AI-ready, blockchain-independent institutional market-data API from Mushee. **Milestone 1** is an executable MVP built around actual public spot-market feeds. Long term: licensed multi-asset data, enterprise SLA-backed feeds, independently attested oracle updates and differentiated AI market intelligence.
+AI-ready, blockchain-independent institutional market-data API from Mushee. **Milestone 1** delivers a live REST market-data MVP. **Milestone 2A** adds a dedicated WebSocket collector, optional PostgreSQL tick history and tenant-scoped API access. Long term: licensed multi-asset data, enterprise SLA-backed feeds, independently attested oracle updates and differentiated AI market intelligence.
 
 **Status: development MVP. Not a production-grade oracle, licensed data redistribution service, regulated benchmark or decentralised validator network. Do not use it to settle positions or liquidate collateral.**
+
+## Milestone 2A — streaming and institutional API foundations
+
+The system now has **two deployable processes**. The REST API (`npm start`) serves the market terminal and HTTP endpoints. The collector (`npm run stream`) maintains live public Coinbase Exchange and Kraken WebSocket connections, broadcasts normalized ticker/reference updates to subscribed client sockets and optionally writes captured ticks to PostgreSQL.
+
+Start both processes on Node 20+:
+
+    npm install
+    npm start
+    # another terminal:
+    npm run stream
+
+Streaming listens on STREAM_PORT (default 3001). The collector serves GET /healthz, plus a WebSocket at /stream/v1/tickers. WebSocket clients must send:
+
+    {"type":"subscribe","symbols":["BTC-USD","ETH-USD"]}
+
+Every received exchange tick contains a venue identity and timestamps; derived reference messages state whether a single remaining source is degraded. Clients receive no fabricated prices during outages. Multi-venue price observations are indicative and exclude execution fees.
+
+To enable durable historical ticks and tenant keys, supply DATABASE_URL for **both** the REST process and collector, then execute:
+
+    npm run migrate
+    npm run tenant -- --name="Example Institution" --plan=growth --limit=500
+
+The tenant command prints a random API key **once**. Store it securely. All paid data requests use x-api-key or Authorization: Bearer, while /api/v1/health and /api/v1/markets remain public. The same key may be sent in the WebSocket upgrade header by server-side subscribers.
+
+In database mode, the REST and streaming services reject missing keys and meter authenticated REST requests or stream connections into api_usage_minute using PostgreSQL's atomic upserts. The basic rate limit is per-key per-minute; **streaming messages are not individually billed or quota-metered yet**.
+
+Recorded ticker samples can be queried with:
+
+    GET /api/v1/ticks?symbol=BTC-USD&limit=100
+
+This endpoint returns actual persisted WebSocket observations; when no DB is configured it reports HISTORY_NOT_CONFIGURED (HTTP 503). No old data is backfilled. The database does not create history by itself: the collector must be running and the exchanges must be reachable.
+
+**Deployment:** Vercel can serve the REST endpoint and dashboard. For continuous exchange collection, run `npm run stream` as an independent, always-on Node service with TLS termination, health monitoring and restart policy. Vercel added beta WebSocket support in 2026, but function lifetime and process-scaling semantics do not replace a permanent collector. Each collector instance creates its own exchange subscriptions and tick inserts; coordinate or shard them before multi-instance production use.
+
+**Operational constraints:** Do not offer institutional subscriptions before obtaining upstream commercial redistribution licences, implementing per-tenant entitlements, security review, data retention/partitioning and monitoring, and establishing SLAs. The default sandbox is open when **both** API_KEY and DATABASE_URL are empty. Always configure authentication for internet-facing streaming services.
 
 ## Implemented now
 
@@ -36,6 +72,7 @@ The local development server does not automatically load .env files. Use shell e
 | GET /api/v1/liquidity | symbol=BTC-USD&side=buy&notional=100000 | Indicative multi-venue order-book execution estimate |
 | GET /api/v1/history | symbol=ETH-USD&granularity=3600&limit=48 | Real Coinbase OHLCV candles |
 | GET /api/v1/intelligence | symbol=SOL-USD | Historical risk metrics and optional AI commentary |
+| GET /api/v1/ticks | symbol=BTC-USD&limit=100 | Persisted streaming tick observations; DATABASE_URL required |
 
     curl 'http://localhost:3000/api/v1/price?symbol=BTC-USD'
     curl 'http://localhost:3000/api/v1/liquidity?symbol=ETH-USD&side=buy&notional=100000'
@@ -52,7 +89,7 @@ Copy variables from .env.example into your deployment environment:
 - AI_MODEL: model identifier; default gpt-4.1-mini.
 - PORT: local server port; default 3000.
 
-**Paid model calls require BOTH AI_API_KEY and API_KEY.** AI provider failures fall back to the honest statistical-only result. Do not expose API_KEY or AI_API_KEY in public browser code.
+**Paid model calls require AI_API_KEY and API_KEY or DATABASE_URL-based authentication.** AI provider failures fall back to the honest statistical-only result. Do not expose API_KEY or AI_API_KEY in public browser code.
 
 ## Deploy to Vercel
 
@@ -63,16 +100,16 @@ No paid data-provider credentials are needed for the public crypto sandbox. Exch
 ## Important limitations
 
 1. Public Coinbase/Kraken data does NOT imply commercial redistribution rights or enterprise SLAs. Licence external datasets before charging institutional customers for them.
-2. There is **no decentralised oracle consensus yet**. Multiple independent data sources are not equivalent to independently governed validator nodes.
+2. There is **no decentralised oracle consensus yet**. The streaming collectors are centrally operated by Mushee and read independent upstream exchanges. Multiple independent data sources are not equivalent to independently governed validator nodes.
 3. The cross-venue liquidity calculations ignore exchange fees, venue entitlements, actual order routing, latency, and live market impact. Do not use as an executable price guarantee.
-4. The in-process TTL cache is not a persistent data store, nor a distributed rate limiter. Before launching a public paid API, add shared quotas, tenant-specific API keys, usage accounting, revocation and billing.
+4. The REST in-process TTL cache is not a durable store. Database mode adds per-key minute quotas and basic usage counters; billing, entitlement scopes, key rotation/revocation tooling, abuse control and retention automation remain to be implemented.
 5. Equities, forex, RWA, derivatives and commodity data are **not integrated yet**. They require sourcing, redistribution contracts, entitlements and additional engineering.
 6. Production deployment requires independent testing, security auditing, independent market-data validation, feed freshness checks, resilient collectors, on-call processes, and clear methodologies.
 
 ## Roadmap
 
 - **M1 (this branch):** live crypto spot API, order books, historical data, early analytics, optional AI commentary, tests, public dashboard and Vercel scaffold.
-- **M2:** streaming ingress/egress, durable tick history, market surveillance, source sequence-gap checking, multiregion collection, enterprise auth/usage billing.
+- **M2A (this branch):** streaming ingress/egress, optional durable tick history, tenant-scoped hashed API keys and atomic request limits. **M2B (remaining):** sequence-gap tracking, multi-region redundancy, subscriptions billing, entitlement policies, full observability and retention automation.
 - **M3:** validated proprietary liquidity models and differentiated AI risk datasets with transparent backtesting.
 - **M4:** independent oracle publishers and validator operators, signed update commitments, onchain proof verification, slashing/disputes and governance.
 - **M5:** commercially licensed equities, FX, commodities, rates, derivatives and RWA datasets.

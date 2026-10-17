@@ -1,4 +1,5 @@
-import { timingSafeEqual } from "node:crypto";
+import { authorise, presentedApiKey } from "../lib/auth.js";
+import { recentTicks, hasDatabase } from "../lib/storage.js";
 import { listMarkets, resolveMarket, boundedNumber } from "../lib/catalog.js";
 import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence } from "../lib/market.js";
 import { generateCommentary } from "../lib/ai.js";
@@ -14,16 +15,9 @@ function send(res, code, data) {
   res.end(JSON.stringify(data));
 }
 
-function matchesKey(provided, expected) {
-  if (!provided || !expected) return false;
-  const left = Buffer.from(provided);
-  const right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
-}
-
 function cors(req, res) {
   const origin = req.headers.origin;
-  const keyEnabled = Boolean(process.env.API_KEY);
+  const keyEnabled = Boolean(process.env.API_KEY || process.env.DATABASE_URL);
   const allowed = (process.env.ALLOWED_ORIGINS || "").split(",").map((x) => x.trim()).filter(Boolean);
   if (!keyEnabled) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -45,7 +39,7 @@ export default async function handler(req, res) {
 
   if (path === "/api/v1/health") {
     return send(res, 200, {
-      service: "Mushee Market Data Network", status: "running", version: "0.1.0",
+      service: "Mushee Market Data Network", status: "running", version: "0.2.0",
       startedAt: STARTED, upstreamChecked: false,
       note: "Health confirms the API process is running, not upstream availability."
     });
@@ -55,17 +49,17 @@ export default async function handler(req, res) {
       note: "Equities, FX, commodities and RWA data require authorised suppliers and additional integrations." });
   }
 
-  const configuredKey = process.env.API_KEY;
-  const suppliedKey = typeof req.headers["x-api-key"] === "string" ? req.headers["x-api-key"] :
-    (typeof req.headers.authorization === "string" &&
-      req.headers.authorization.startsWith("Bearer ") ? req.headers.authorization.slice(7) : "");
-  if (configuredKey && !matchesKey(suppliedKey, configuredKey)) {
-    return send(res, 401, { error: "UNAUTHORISED", message: "Provide an authorised x-api-key." });
+  try {
+    const permission = await authorise(presentedApiKey(req.headers));
+    if (!permission.ok) return send(res, permission.code, {error:permission.error});
+  } catch {
+    return send(res,503,{error:"AUTH_BACKEND_UNAVAILABLE",
+      message:"Credential verification or usage metering unavailable."});
   }
 
   const endpoints = new Set([
     "/api/v1/price", "/api/v1/orderbook", "/api/v1/liquidity",
-    "/api/v1/history", "/api/v1/intelligence"
+    "/api/v1/history", "/api/v1/intelligence", "/api/v1/ticks"
   ]);
   if (!endpoints.has(path)) {
     return send(res, 404, { error: "NOT_FOUND", endpoints: [
@@ -94,6 +88,18 @@ export default async function handler(req, res) {
       if (notional === null) return send(res, 400, { error: "INVALID_NOTIONAL" });
       if (depth === null || !Number.isInteger(depth)) return send(res, 400, { error: "INVALID_DEPTH" });
       return send(res, 200, await getLiquidity(market, side, notional, depth));
+    }
+    if (path === "/api/v1/ticks") {
+      const limit = boundedNumber(url.searchParams.get("limit"), 100, 1, 500);
+      if (limit === null || !Number.isInteger(limit)) return send(res,400,{error:"INVALID_LIMIT"});
+      if (!hasDatabase()) return send(res,503,{error:"HISTORY_NOT_CONFIGURED",
+        message:"Persistent tick history requires DATABASE_URL and a running streaming collector."});
+      const ticks = await recentTicks(market.symbol,limit);
+      return send(res,200,{
+        symbol:market.symbol,count:ticks.length,ticks,
+        source:"Recorded exchange WebSocket ticker events",
+        note:"Historical storage contains only ticks captured while the collector was connected."
+      });
     }
     if (path === "/api/v1/history") {
       const granularity = boundedNumber(url.searchParams.get("granularity"), 3600, 60, 86400);
