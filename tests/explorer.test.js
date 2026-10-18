@@ -94,3 +94,14 @@ test("homepage visibly exposes all seven feed sections with working deep links",
   assert.ok(home.includes("128-instrument directory"));
   assert.ok(home.includes("Directory entries are not live price feeds"));
 });
+
+test("Vercel rewrites all API v1 paths to a real function entry point",async()=>{
+  const v=JSON.parse(await readFile(new URL("../vercel.json",import.meta.url),"utf8"));
+  assert.equal(v.framework,null);
+  assert.equal(v.functions["api/v1.js"].maxDuration,10);
+  assert.deepEqual(v.rewrites.find(x=>x.source==="/api/v1/:path*"),
+    {source:"/api/v1/:path*",destination:"/api/v1"});
+  const bridge=await readFile(new URL("../api/v1.js",import.meta.url),"utf8");
+  assert.match(bridge,/export default handler/);
+  assert.match(bridge,/import handler from "\.\/index\.js"/);
+});
