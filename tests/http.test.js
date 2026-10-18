@@ -180,3 +180,27 @@ test("customer billing cannot be read without valid tenant credentials",async()=
     if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
   }
 });
+
+
+test("public explorer endpoints are readable without institutional keys",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  process.env.API_KEY="institution-private";
+  delete process.env.DATABASE_URL;
+  try {
+    await withServer(async(base)=>{
+      const categories=await fetch(base+"/api/v1/explore/categories");
+      assert.equal(categories.status,200);
+      assert.equal((await categories.json()).feedCount,128);
+      const equities=await fetch(base+"/api/v1/explore/feeds?category=equities&limit=3");
+      const body=await equities.json();
+      assert.equal(equities.status,200);
+      assert.equal(body.feeds.length,3);
+      assert.ok(body.feeds.every(x=>x.status==="planned"&&!Object.hasOwn(x,"price")));
+      const locked=await fetch(base+"/api/v1/price?symbol=BTC-USD");
+      assert.equal(locked.status,401);
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});

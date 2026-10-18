@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c2523">
+  <meta name="description" content="Mushee Market Explorer — browse crypto, equities, FX, precious metals, indices, commodities and yield feeds with transparent connection status.">
+  <title>Explore Feeds | Mushee Market Data Network</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230c2523'/%3E%3Ctext x='32' y='44' font-family='Arial' font-size='42' font-weight='bold' fill='%23bef68a' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17302c;background:#f6f8f5;font-size:14px}
+    *{box-sizing:border-box}body{margin:0;min-width:300px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:not-allowed}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}
+    .shell{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+    .sidebar{background:#112a26;color:#e3efe6;padding:27px 17px;display:flex;flex-direction:column;border-right:1px solid #24463f;position:sticky;top:0;height:100vh;overflow:auto}
+    .logo{display:flex;align-items:center;gap:11px;padding:0 13px 25px;font-size:19px;font-weight:850;letter-spacing:.12em}.logo-mark{display:grid;place-items:center;width:34px;height:34px;color:#143324;background:#c3f58e;border-radius:10px;font-size:22px;font-weight:950;letter-spacing:-.1em}
+    .caption{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:#95bbac;font-weight:750;margin:19px 13px 12px}
+    .navbtn{width:100%;display:flex;align-items:center;gap:11px;border:1px solid transparent;border-radius:10px;background:transparent;color:#d3e3da;text-align:left;padding:12px 13px;margin:2px 0;font-weight:580;line-height:1.2}
+    .navbtn:hover{background:#24443a}.navbtn.active{background:#d6f7b6;color:#143327;font-weight:800}
+    .navbtn .label{flex:1}.navbtn .count{font-size:11px;font-variant-numeric:tabular-nums;opacity:.8}.navbtn .ico{width:24px;text-align:center;font-size:17px}
+    .side-sep{height:1px;background:#335148;margin:16px 13px}
+    .side-bottom{margin-top:auto;padding:18px 13px 0}.side-bottom p{font-size:12px;line-height:1.6;color:#b2c9be;margin:8px 0}.side-bottom a{display:inline-flex;margin-top:10px;color:#d5ffaf;font-weight:750}
+    .main{min-width:0}.topbar{height:75px;background:#fff;border-bottom:1px solid #e3e9e3;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 37px}
+    .breadcrumbs{display:flex;gap:11px;align-items:center;color:#71827a}.breadcrumbs strong{color:#244238}
+    .topactions{display:flex;gap:12px;align-items:center}.topactions a{font-size:12px;font-weight:750;color:#40554a}.topactions .strong{background:#12352d;color:#f0fbe8;padding:10px 16px;border-radius:9px}
+    .content{max-width:1520px;margin:0 auto;padding:34px 37px 70px}
+    .hero{background:radial-gradient(circle at 80% 0%,#d5fcc4,transparent 40%),linear-gradient(112deg,#c9e6dc,#e6f5e8 60%,#d5e3cf);border:1px solid #c8dfd0;border-radius:19px;padding:35px 38px;position:relative;overflow:hidden}
+    .hero:after{content:"";position:absolute;right:-16px;top:-36px;width:180px;height:180px;background-image:radial-gradient(#234c3b66 1px,transparent 1px);background-size:15px 15px;opacity:.6;pointer-events:none}
+    .hero .eyebrow{font-size:11px;font-weight:850;letter-spacing:.2em;color:#28724d;text-transform:uppercase}
+    .hero h1{font-size:clamp(28px,3.5vw,47px);letter-spacing:-.055em;line-height:1.12;max-width:780px;margin:12px 0 12px;font-weight:780}
+    .hero p{font-size:14px;color:#466457;max-width:620px;line-height:1.7;margin:0}.hero .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;align-items:center}
+    .btn{border:1px solid #d4dfd5;border-radius:9px;padding:10px 15px;background:white;color:#1b4431;font-weight:750}
+    .btn.dark{background:#14362d;color:#f6ffeb;border-color:#14362d}.btn:hover:not(:disabled){filter:brightness(.96)}
+    .hint{font-size:11px;color:#567367}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:21px 0 34px}
+    .stat{background:#fff;border:1px solid #e0e9e2;border-radius:14px;padding:20px 23px}.stat small{display:block;color:#688078;font-size:12px;margin-bottom:7px}
+    .stat strong{font-size:30px;letter-spacing:-.055em;font-variant-numeric:tabular-nums}.stat em{display:block;font-size:11px;font-style:normal;color:#7b9087;margin-top:6px}
+    .sectiontop{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:19px}.sectiontop h2{font-size:27px;letter-spacing:-.045em;margin:0 0 5px}.sectiontop p{margin:0;color:#788b82;line-height:1.5}
+    .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}
+    .searchbox{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #dce4db;border-radius:10px;padding:0 13px;flex:1;min-width:210px}
+    .searchbox input{padding:13px 0;border:0;outline:0;min-width:0;width:100%;background:transparent;color:#17362d}
+    select{background:#fff;border:1px solid #dce4db;border-radius:10px;padding:12px 13px;color:#294338;max-width:100%}
+    .smallbtn{border:0;background:transparent;color:#31764e;font-weight:750}
+    .tablewrap{background:#fff;border:1px solid #e0e8df;border-radius:15px;overflow:auto;box-shadow:0 6px 24px #18342a08}
+    table{width:100%;border-collapse:collapse;min-width:730px}th{font-size:11px;color:#697e72;text-transform:uppercase;letter-spacing:.08em;text-align:left;padding:17px 22px;background:#f9fbf9;border-bottom:1px solid #e0e7de;white-space:nowrap}
+    td{padding:16px 22px;border-bottom:1px solid #ebefeb;font-size:13px;vertical-align:middle}tr:last-child td{border-bottom:0}tbody tr:hover{background:#f8fcf7}
+    .asset{display:flex;align-items:center;gap:12px}.token{width:37px;height:37px;flex:0 0 37px;border-radius:12px;background:#ecf4e9;border:1px solid #dce9d8;display:grid;place-items:center;color:#2c6d4b;font-weight:850;font-size:13px}
+    .name{font-size:13px;font-weight:800;color:#223d31}.sub{font-size:11px;color:#7c9085;margin-top:3px}.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+    .tag{display:inline-flex;align-items:center;gap:6px;border-radius:100px;background:#eff2ee;color:#6f8275;font-size:11px;padding:6px 9px;font-weight:750;white-space:nowrap}
+    .tag::before{content:"";width:6px;height:6px;background:#a5b3a7;border-radius:100%}
+    .tag.connected{background:#e2f7e3;color:#21613d}.tag.connected::before{background:#3bad72}
+    .tag.unavailable{background:#fcefe6;color:#9b6139}.tag.unavailable::before{background:#ee9a54}
+    .price{font-variant-numeric:tabular-nums;font-weight:800}.muted{color:#819287}.more{border:1px solid #e0e8df;border-radius:8px;background:white;padding:7px 11px;color:#336346;font-weight:750}
+    .footrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:18px 20px;background:#fff;border-top:1px solid #e2e8e1;color:#687a6d;font-size:12px}
+    .pages{display:flex;align-items:center;gap:12px}.pages button{border:1px solid #dbe5dc;border-radius:8px;background:#fff;padding:8px 12px;color:#214b34}
+    .empty{padding:45px;text-align:center;color:#6b8171}.empty strong{display:block;color:#214334;font-size:17px;margin-bottom:7px}
+    .below{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:32px}.panel{background:#fff;border:1px solid #e2e9e1;border-radius:15px;padding:24px}
+    .panel .eyebrow{font-size:10px;letter-spacing:.17em;text-transform:uppercase;font-weight:800;color:#41815b}.panel h3{font-size:20px;letter-spacing:-.03em;margin:9px 0}.panel p{color:#6f8175;line-height:1.65;font-size:13px}
+    .code{background:#112820;color:#ccf4cb;border-radius:10px;padding:15px;overflow:auto;font:12px/1.85 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+    .note{margin:24px 0 0;font-size:12px;color:#788b7d;line-height:1.6}
+    dialog{border:0;border-radius:19px;padding:0;box-shadow:0 30px 100px #09231966;width:min(550px,calc(100% - 24px));max-height:88vh;overflow:auto;color:#1b392a}
+    dialog::backdrop{background:#0c211b95;backdrop-filter:blur(2px)}
+    .drawer-header{padding:27px 30px;background:#eaf4e7;position:relative}.drawer-header small{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#538266;font-weight:800}
+    .drawer-header h2{margin:10px 0;font-size:27px;letter-spacing:-.04em}.close{position:absolute;right:18px;top:18px;background:#fff;border:1px solid #d1e1d4;border-radius:10px;width:35px;height:35px}
+    .drawer-body{padding:23px 30px 30px}.details{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0 25px}
+    .detail{background:#f7faf6;border-radius:10px;padding:13px}.detail small{font-size:11px;color:#7b9180;display:block;margin-bottom:6px}.detail strong{font-size:13px;overflow-wrap:anywhere}
+    .detail-message{border:1px solid #e6e9db;background:#fcfcf2;border-radius:11px;padding:15px;color:#5f6e54;font-size:12px;line-height:1.6}
+    footer{padding:28px 0;margin-top:36px;border-top:1px solid #e0e9df;color:#789082;font-size:12px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    :focus-visible{outline:3px solid #599d60;outline-offset:2px}
+    @media(max-width:1000px){.shell{grid-template-columns:210px minmax(0,1fr)}.content{padding:23px}.topbar{padding:0 23px}.sidebar{padding:23px 12px}.hero{padding:28px 25px}}
+    @media(max-width:720px){.shell{display:block}.sidebar{height:auto;position:static;padding:14px;max-height:none}.sidebar .logo{padding:0 8px 12px;font-size:17px}.sidebar .caption,.side-sep,.side-bottom{display:none}.sidebar nav{display:flex;gap:7px;overflow-x:auto}.navbtn{white-space:nowrap;width:auto;flex:0 0 auto;margin:0;padding:9px 11px;font-size:12px}.navbtn .count{display:none}.topbar{height:60px;padding:0 17px}.topactions a:not(.strong){display:none}.content{padding:18px 15px}.hero{padding:26px 20px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{padding:14px 12px}.stat strong{font-size:23px}.below{grid-template-columns:1fr}.sectiontop{align-items:start;flex-direction:column}.toolbar{gap:8px}.searchbox{flex-basis:100%}.footrow{padding:14px}.topactions .strong{padding:8px 10px}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" aria-label="Asset classes">
+    <a href="/" class="logo"><span class="logo-mark">M</span><span>MUSHEE</span></a>
+    <div class="caption">Market explorer</div>
+    <nav id="category-nav" aria-label="Browse asset classes"><a class="navbtn active" href="/explore?category=all">All feeds</a></nav>
+    <div class="side-sep"></div>
+    <div class="caption">Infrastructure</div>
+    <a class="navbtn" href="/#terminal"><span class="ico">↗</span><span class="label">Market terminal</span></a>
+    <a class="navbtn" href="#developers"><span class="ico">⌘</span><span class="label">Developer API</span></a>
+    <a class="navbtn" href="#products"><span class="ico">◈</span><span class="label">Products & access</span></a>
+    <div class="side-bottom">
+      <p>Mushee Market Data Network</p>
+      <p>Transparent coverage. Only connected sources show observed prices. Planned markets are not misrepresented as live.</p>
+      <a href="https://github.com/mushee-io/Mushee-MM" target="_blank" rel="noopener">View source ↗</a>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumbs">Mushee <span>/</span> <strong>Explore feeds</strong></div>
+      <div class="topactions">
+        <a href="/#terminal">Market terminal</a>
+        <a href="https://github.com/mushee-io/Mushee-MM" target="_blank" rel="noopener">Documentation ↗</a>
+        <a href="#products" class="strong">API access →</a>
+      </div>
+    </header>
+    <div class="content">
+      <section class="hero">
+        <div class="eyebrow">MUSHEE / FINANCIAL DATA INFRASTRUCTURE</div>
+        <h1>Every market deserves<br>transparent data.</h1>
+        <p>Explore instruments across seven asset classes. See which markets are actually connected, examine real observations where available, and discover what's next for the network.</p>
+        <div class="hero-actions">
+          <a href="#feed-browser" class="btn dark">Explore the directory ↗</a>
+          <a href="#developers" class="btn">Developer API</a>
+          <span class="hint">No invented prices or coverage guarantees.</span>
+        </div>
+      </section>
+      <section class="metrics" aria-label="Network catalog statistics">
+        <div class="stat"><small>Directory instruments</small><strong id="feed-count">—</strong><em>Catalog definitions, not live feeds</em></div>
+        <div class="stat"><small>Asset classes</small><strong id="category-count">7</strong><em>Dedicated explorer sections</em></div>
+        <div class="stat"><small>Exchange-connected pairs</small><strong id="connected-count">—</strong><em>Price availability checked live</em></div>
+      </section>
+      <section id="feed-browser">
+        <div class="sectiontop">
+          <div><h2 id="section-title">All feeds</h2><p id="section-desc">Search and filter the full directory.</p></div>
+          <div><span class="tag connected" id="directory-badge">Directory metadata</span></div>
+        </div>
+        <div class="toolbar">
+          <label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search BTC, Apple, Gold, EUR/USD..." aria-label="Search instruments"></label>
+          <select id="status" aria-label="Filter by connection status">
+            <option value="all">All statuses</option><option value="connected">Connected sources</option><option value="planned">Planned / no feed</option>
+          </select>
+          <select id="sort" aria-label="Sort results">
+            <option value="name">Sort: Name</option><option value="symbol">Sort: Symbol</option><option value="category">Sort: Category</option>
+          </select>
+          <button class="smallbtn" id="reset" type="button">Reset</button>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Instrument</th><th>Category</th><th>Type</th><th>Quote ccy</th><th>Data status</th><th>Observed price</th><th></th></tr></thead>
+            <tbody id="feed-table"><tr><td colspan="7" class="empty">Loading verified directory metadata…</td></tr></tbody>
+          </table>
+          <div class="footrow"><span id="result-label">Loading…</span><div class="pages"><button id="previous" type="button" disabled>← Previous</button><span id="page-label">—</span><button id="next" type="button" disabled>Next →</button></div></div>
+        </div>
+        <p class="note" id="coverage-note" role="status">Only BTC/USD, ETH/USD and SOL/USD have public exchange connectors. Other instruments are planned; live data requires licensed feeds and applicable entitlements.</p>
+      </section>
+      <section id="developers" class="below">
+        <div class="panel">
+          <div class="eyebrow">Developer-first</div>
+          <h3>One catalog API.<br>Every asset section.</h3>
+          <p>Get browsable metadata, filter by asset class, fetch instrument details and see source status. Authenticated institutional data is handled through separate entitled endpoints.</p>
+          <div class="code">GET /api/v1/explore/categories
+GET /api/v1/explore/feeds?category=fx
+GET /api/v1/explore/feed?id=crypto:BTC-USD
+GET /api/v1/explore/quotes</div>
+        </div>
+        <div class="panel" id="products">
+          <div class="eyebrow">Institutions & developers</div>
+          <h3>Data, intelligence,<br>and oracle infrastructure.</h3>
+          <p>Use spot price references, depth analysis, historical data, experimental volatility models and signed oracle prototypes. Commercial contracts, pricing, dataset licensing and uptime guarantees are not yet established.</p>
+          <a href="https://github.com/mushee-io/Mushee-MM#api" target="_blank" rel="noopener" class="btn dark" style="display:inline-block">Review API documentation ↗</a>
+        </div>
+      </section>
+      <footer><span>© 2026 Mushee · Market Data Network</span><span>Directory status ≠ live licensed availability. No financial advice.</span></footer>
+    </div>
+  </main>
+</div>
+<dialog id="feed-detail" aria-label="Instrument details">
+  <div class="drawer-header"><button class="close" id="close-detail" aria-label="Close details" type="button">✕</button><small id="detail-section">INSTRUMENT DETAILS</small><h2 id="detail-name">—</h2><div class="mono" id="detail-symbol">—</div></div>
+  <div class="drawer-body">
+    <span class="tag" id="detail-status">—</span>
+    <div class="details">
+      <div class="detail"><small>Asset class</small><strong id="detail-asset">—</strong></div>
+      <div class="detail"><small>Quote currency</small><strong id="detail-quote">—</strong></div>
+      <div class="detail"><small>Market session</small><strong id="detail-session">—</strong></div>
+      <div class="detail"><small>Observed price</small><strong id="detail-price">—</strong></div>
+      <div class="detail"><small>Market data sources</small><strong id="detail-sources">—</strong></div>
+      <div class="detail"><small>Feed identifier</small><strong id="detail-id">—</strong></div>
+    </div>
+    <p class="detail-message" id="detail-notice">—</p>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn dark" id="copy-id" type="button">Copy feed ID</button>
+      <button class="btn" id="close-detail-bottom" type="button">Close</button>
+    </div>
+  </div>
+</dialog>
+<script type="module" src="/explore.js"></script>
+</body>
+</html>

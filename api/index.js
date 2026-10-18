@@ -10,6 +10,7 @@ import { listMarkets, resolveMarket, boundedNumber } from "../lib/catalog.js";
 import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence, getExecutionIntelligence } from "../lib/market.js";
 import { generateCommentary } from "../lib/ai.js";
 import { cached } from "../lib/cache.js";
+import { handleExplorer } from "../lib/explorer-api.js";
 
 const STARTED = new Date().toISOString();
 
@@ -65,10 +66,20 @@ export default async function handler(req, res) {
 
   if (req.method==="GET" && path === "/api/v1/health") {
     return send(res, 200, {
-      service: "Mushee Market Data Network", status: "running", version: "0.6.0",
+      service: "Mushee Market Data Network", status: "running", version: "0.8.0",
       startedAt: STARTED, upstreamChecked: false,
       note: "Health confirms the API process is running, not upstream availability."
     });
+  }
+  // Public explorer discovery routes use hardcoded allowlisted price markets.
+  // They never return licensed vendor prices, tenant information or billed API keys.
+  if(req.method==="GET" && path.startsWith("/api/v1/explore/")) {
+    try{
+      const result=await handleExplorer(url);
+      return send(res,result.code,result.data);
+    } catch {
+      return send(res,503,{error:"EXPLORER_TEMPORARILY_UNAVAILABLE"});
+    }
   }
   if (req.method==="GET" && path === "/api/v1/markets") {
     return send(res, 200, { markets: listMarkets(), assetClasses: ["crypto-spot"],

@@ -86,3 +86,21 @@ test("Provider JSON must describe the exact allowlisted symbol and provide a val
     }
   }
 });
+
+
+test("licensing adapters accept all seven explorer market categories without fabricating prices", async()=>{
+  const previous=process.env.LICENSED_ASSET_CATALOG;
+  process.env.LICENSED_ASSET_CATALOG=JSON.stringify([
+    {assetClass:"index",symbol:"SPX",currency:"USD"},
+    {assetClass:"metal",symbol:"XAUUSD",currency:"USD"},
+    {assetClass:"rate",symbol:"SOFR",currency:"USD"}
+  ]);
+  try {
+    const configured=configuredAssets();
+    assert.deepEqual(configured.map(x=>x.assetClass),["index","metal","rate"]);
+    assert.equal((await getLicensedQuote("index","SPX")).status,503);
+  }finally{
+    if(previous===undefined)delete process.env.LICENSED_ASSET_CATALOG;
+    else process.env.LICENSED_ASSET_CATALOG=previous;
+  }
+});
