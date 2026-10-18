@@ -5,7 +5,7 @@ import { getPool, closePool, hasDatabase } from "../lib/storage.js";
 if (!hasDatabase()) { console.error("DATABASE_URL is required"); process.exitCode = 1; }
 else {
   try {
-    for (const migration of ["001_market_data.sql","002_entitlements.sql"]) {
+    for (const migration of ["001_market_data.sql","002_entitlements.sql","003_oracle_and_usage.sql"]) {
       const filename = fileURLToPath(new URL("../sql/" + migration, import.meta.url));
       const ddl = await readFile(filename,"utf8");
       await getPool().query(ddl);

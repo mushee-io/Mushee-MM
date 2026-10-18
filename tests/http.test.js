@@ -88,3 +88,49 @@ test("execution intelligence invalid side rejected", async () => {
     assert.equal(r.status,400);assert.equal((await r.json()).error,"INVALID_SIDE");
   });
 });
+
+
+test("Oracle publisher POST without database returns explicit unavailable state",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const r=await fetch(base+"/api/v1/oracle/reports",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({foo:"bar"})
+      });
+      assert.equal(r.status,503);assert.equal((await r.json()).error,"ORACLE_DATABASE_REQUIRED");
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});
+
+test("models endpoint refuses to fake unconfigured historical observations",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const r=await fetch(base+"/api/v1/models/volatility?symbol=BTC-USD");
+      assert.equal(r.status,503);assert.equal((await r.json()).error,"MODEL_HISTORY_NOT_CONFIGURED");
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});
+
+test("account usage needs real database tenant credentials",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const r=await fetch(base+"/api/v1/account/usage");
+      assert.equal(r.status,403);assert.equal((await r.json()).error,"TENANT_ACCOUNT_REQUIRED");
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});

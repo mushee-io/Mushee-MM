@@ -8,8 +8,8 @@ const name = args.name?.trim();
 const plan = args.plan || "starter";
 const limit = Number(args.limit || 120);
 const label = args.label || "primary";
-const scopes = (args.scopes || "price,depth,history,intelligence,stream").split(",");
-const VALID_SCOPES = ["price","depth","history","intelligence","stream"];
+const scopes = (args.scopes || "price,depth,history,intelligence,stream,account").split(",");
+const VALID_SCOPES = ["price","depth","history","intelligence","stream","publish","account"];
 
 if (!hasDatabase() || !name || name.length > 140 ||
     !["starter","growth","enterprise"].includes(plan) ||

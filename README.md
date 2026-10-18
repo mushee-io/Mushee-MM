@@ -4,6 +4,25 @@ AI-ready, blockchain-independent institutional market-data API from Mushee. **Mi
 
 **Status: development MVP. Not a production-grade oracle, licensed data redistribution service, regulated benchmark or decentralised validator network. Do not use it to settle positions or liquidate collateral.**
 
+
+## Milestone 3 Research / Milestone 4 Publisher Prototype / Enterprise API
+
+**New research endpoint:** `GET /api/v1/models/volatility?symbol=BTC-USD` reads stored real one-minute median ticks, requires continuous observed history and computes an EWMA volatility forecast with historical rolling out-of-sample evaluation against a trailing-variance baseline. This is **a reproducible statistical research baseline, NOT a validated predictive AI model**. It returns 503 without a database and 422 for missing/insufficient history.
+
+**New experimental signed-oracle endpoints:**
+
+- `POST /api/v1/oracle/reports` — authenticated publishing of canonical Ed25519-signed price observations, registered publisher permissions, 30-second freshness window and per-publisher strictly increasing sequence.
+- `GET /api/v1/oracle/consensus?symbol=BTC-USD` — re-verifies historical signatures and requires at least two different active operators publishing different approved sources; shows a price ONLY when those checks pass and prices agree.
+- A standalone publisher executable is available via `npm run publisher`; see `docs/oracle-operators.md`. Running this software twice under Mushee does **not** create independent decentralisation.
+
+**Institutional account usage:** `GET /api/v1/account/usage?days=30` reports usage for the authenticated tenant only. This is metering, NOT payment collection or subscription billing. Database-based scopes now include `publish` and `account`.
+
+**JavaScript SDK:** import `MusheeClient` from `sdk/javascript/index.js`. API keys should be used server-side, never in public browser bundles.
+
+**Important:** Run `npm run migrate` after updating to apply SQL migration 003. No cloud, database, external publisher, EVM contract or oracle has been deployed by these changes.
+
+**Operational guide:** `docs/institutional-operations.md` covers the deployment and reliability requirements. Multi-asset equities, FX and RWA feeds are blocked pending legal vendor contracts and genuine licensed integrations.
+
 ## Milestone 2B — Institutional data quality and permissions
 
 - Exchange observations must be fresh (default 15 seconds). Invalid, stale or implausibly future-dated observations are excluded; if all are rejected, the API returns 503 instead of fabricating prices.
@@ -91,6 +110,10 @@ The local development server does not automatically load .env files. Use shell e
 | GET /api/v1/intelligence | symbol=SOL-USD | Historical risk metrics and optional AI commentary |
 | GET /api/v1/ticks | symbol=BTC-USD&limit=100 | Persisted streaming tick observations; DATABASE_URL required |
 | GET /api/v1/execution-intelligence | symbol=ETH-USD&side=buy&notional=100000 | Descriptive liquidity and market-quality signals |
+| GET /api/v1/models/volatility | symbol=BTC-USD | Historical EWMA research & baseline comparison; database required |
+| GET /api/v1/oracle/consensus | symbol=BTC-USD | Signed publisher quorum; database & separate operators required |
+| POST /api/v1/oracle/reports | Signed JSON | Scoped publisher-only oracle attestation ingestion |
+| GET /api/v1/account/usage | days=30 | Tenant-scoped request history; database required |
 
     curl 'http://localhost:3000/api/v1/price?symbol=BTC-USD'
     curl 'http://localhost:3000/api/v1/liquidity?symbol=ETH-USD&side=buy&notional=100000'
