@@ -1,6 +1,6 @@
 {
   "name": "mushee-market-data",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Mushee Market Data Network — real-time institutional data infrastructure",
@@ -26,5 +26,8 @@
   "dependencies": {
     "pg": "^8.13.1",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "solc": "^0.8.30"
   }
 }

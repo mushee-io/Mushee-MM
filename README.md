@@ -193,3 +193,7 @@ No paid data-provider credentials are needed for the public crypto sandbox. Exch
 - **M5:** commercially licensed equities, FX, commodities, rates, derivatives and RWA datasets.
 
 This repo is named Mushee-MM and the service is branded **Mushee Market Data Network**.
+
+## Experimental EVM oracle verifier (compiler tested)
+
+A Solidity attestation verifier prototype lives at `contracts/MusheeOracle.sol`, with source-separated EVM secp256k1 publisher keys, an owner-managed registry, EIP-191 proof validation, two distinct source-category quorum, freshness and sequence replay checks. It is **not an independent onchain network** and it has **not been deployed or security-audited**. `npm test` compiles bytecode using the `solc` development dependency. See `docs/onchain-oracle.md` for the distinct Ed25519 versus EVM cryptographic signing formats and security boundaries.
