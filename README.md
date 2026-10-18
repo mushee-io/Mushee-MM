@@ -6,6 +6,24 @@ AI-ready, blockchain-independent institutional market-data API from Mushee. **Mi
 
 
 
+
+## Multi-asset feed explorer — v0.8
+
+An original Mushee dashboard inspired by modern institutional feed explorers is accessible at **/explore** (Vercel) or **http://localhost:3000/explore** (local Node).
+
+The explorer has dedicated browsing sections for **Indices, Precious Metals, Crypto, Equities, FX, Commodities, and Interest Rates & Yields**. The searchable, sortable, paginated catalog presently contains **128 instrument definitions**. Catalog listing is not the same as supplying a commercial market feed.
+
+Public API routes (no API key required, including when tenant auth is enabled):
+
+- \`GET /api/v1/explore/categories\` — actual section counts and connector-ready counts
+- \`GET /api/v1/explore/feeds?category=fx&status=planned&q=usd&limit=25&offset=0\` — search/filter/page catalog
+- \`GET /api/v1/explore/feed?id=crypto%3ABTC-USD\` — instrument detail and source-status
+- \`GET /api/v1/explore/quotes\` — only BTC-USD, ETH-USD and SOL-USD public exchange quotes, cached for 20 seconds per instance
+
+**Integrity:** Only three explicitly integrated crypto markets may produce price values. The new equities, precious metals, indices, currency, commodities, and rates listings are marked "Coming soon" until actual vendor feeds, redistribution licences and entitlements are in place. Missing or unreachable exchanges cause an unavailable status, not synthetic prices. Price reporting is indicative, not an institutional oracle or executable trading quote.
+
+This release does not create or activate thousands of Pyth feeds, use Pyth branding, or reuse Pyth-licensed prices; it supplies Mushee's own scalable instrument directory and visible connection status. Existing licensed vendor price endpoints remain protected by tenant entitlements.
+
 ## Licensed multi-asset vendor gateway — adapter only
 
 Milestone 5 now has a **fail-closed adapter and tenant entitlement framework** for equities, FX, commodities, bonds, derivatives and RWAs. No commercial asset prices are included or fabricated by default. Operators must negotiate real vendor access, ensure redistribution is permitted, and configure a compatible gateway.
