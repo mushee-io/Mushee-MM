@@ -9,6 +9,20 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: mushee_test
+          POSTGRES_USER: mushee_test
+          POSTGRES_PASSWORD: test_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U mushee_test -d mushee_test"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,3 +31,11 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm test
+      - name: Verify SQL migrations against disposable Postgres
+        run: npm run migrate
+        env:
+          DATABASE_URL: postgresql://mushee_test:test_only_password@localhost:5432/mushee_test
+      - name: Verify tenant access and signed oracle reports in Postgres
+        run: node tests/db-integration.mjs
+        env:
+          DATABASE_URL: postgresql://mushee_test:test_only_password@localhost:5432/mushee_test
