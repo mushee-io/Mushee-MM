@@ -3,6 +3,8 @@ import { recentTicks, hasDatabase, minuteMedianPriceSeries, selfUsage } from "..
 import { submitOracleReport, readOracleConsensus } from "../lib/oracle-storage.js";
 import { AttestationError } from "../lib/oracle.js";
 import { evaluateVolatility } from "../lib/volatility.js";
+import { evaluateTrainedVolatility } from "../lib/ml-volatility.js";
+import { previewBill, listBillingDrafts } from "../lib/billing.js";
 import { configuredAssets, isLicensedEntitled, getLicensedQuote } from "../lib/licensed.js";
 import { listMarkets, resolveMarket, boundedNumber } from "../lib/catalog.js";
 import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence, getExecutionIntelligence } from "../lib/market.js";
@@ -63,7 +65,7 @@ export default async function handler(req, res) {
 
   if (req.method==="GET" && path === "/api/v1/health") {
     return send(res, 200, {
-      service: "Mushee Market Data Network", status: "running", version: "0.5.0",
+      service: "Mushee Market Data Network", status: "running", version: "0.6.0",
       startedAt: STARTED, upstreamChecked: false,
       note: "Health confirms the API process is running, not upstream availability."
     });
@@ -77,8 +79,8 @@ export default async function handler(req, res) {
     const scope = ["/api/v1/price","/api/v1/oracle/consensus","/api/v1/licensed/quote","/api/v1/licensed/catalog"].includes(path) ? "price" :
       ["/api/v1/orderbook","/api/v1/liquidity","/api/v1/execution-intelligence"].includes(path) ? "depth" :
       ["/api/v1/history","/api/v1/ticks"].includes(path) ? "history" :
-      ["/api/v1/intelligence","/api/v1/models/volatility"].includes(path) ? "intelligence" :
-      path === "/api/v1/account/usage" ? "account" :
+      ["/api/v1/intelligence","/api/v1/models/volatility","/api/v1/models/volatility-ml"].includes(path) ? "intelligence" :
+      ["/api/v1/account/usage","/api/v1/account/billing-preview","/api/v1/account/billing-drafts"].includes(path) ? "account" :
       path === "/api/v1/oracle/reports" && req.method === "POST" ? "publish" : null;
     const permission = await authorise(presentedApiKey(req.headers),{scope});
     if (permission.ok) req.authorisedTenant = permission.tenantId || null;
@@ -92,7 +94,8 @@ export default async function handler(req, res) {
     "/api/v1/price", "/api/v1/orderbook", "/api/v1/liquidity",
     "/api/v1/history", "/api/v1/intelligence", "/api/v1/ticks", "/api/v1/execution-intelligence",
     "/api/v1/models/volatility", "/api/v1/oracle/consensus", "/api/v1/account/usage",
-    "/api/v1/oracle/reports", "/api/v1/licensed/quote", "/api/v1/licensed/catalog"
+    "/api/v1/oracle/reports", "/api/v1/licensed/quote", "/api/v1/licensed/catalog",
+    "/api/v1/models/volatility-ml", "/api/v1/account/billing-preview", "/api/v1/account/billing-drafts"
   ]);
   if (!endpoints.has(path)) {
     return send(res, 404, { error: "NOT_FOUND", endpoints: [
@@ -138,6 +141,20 @@ export default async function handler(req, res) {
       return send(res,response.status,response.data||{error:response.error});
     } catch {return send(res,503,{error:"LICENSED_PROVIDER_UNAVAILABLE"});}
   }
+  if(path === "/api/v1/account/billing-preview" || path === "/api/v1/account/billing-drafts") {
+    if(!hasDatabase() || !req.authorisedTenant) return send(res,403,{error:"TENANT_ACCOUNT_REQUIRED"});
+    if(path === "/api/v1/account/billing-drafts") {
+      try{return send(res,200,await listBillingDrafts(req.authorisedTenant));}
+      catch{return send(res,503,{error:"BILLING_DATABASE_UNAVAILABLE"});}
+    }
+    const month=url.searchParams.get("month");
+    if(!month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return send(res,400,{error:"INVALID_BILLING_MONTH"});
+    try {return send(res,200,await previewBill(req.authorisedTenant,month));}
+    catch(e) {
+      if(e?.message==="BILLING_NOT_CONFIGURED")return send(res,409,{error:"BILLING_NOT_CONFIGURED"});
+      return send(res,503,{error:"BILLING_DATABASE_UNAVAILABLE"});
+    }
+  }
   if(path === "/api/v1/account/usage") {
     if(!hasDatabase() || !req.authorisedTenant) return send(res,403,{error:"TENANT_ACCOUNT_REQUIRED"});
     const days=boundedNumber(url.searchParams.get("days"),30,1,90);
@@ -157,6 +174,18 @@ export default async function handler(req, res) {
       return send(res,result.status==="ATTESTED"?200:409,{
         ...result,symbol:market.symbol
       });
+    }
+    if (path === "/api/v1/models/volatility-ml") {
+      if(!hasDatabase())return send(res,503,{error:"MODEL_HISTORY_NOT_CONFIGURED"});
+      const bars=await minuteMedianPriceSeries(market.symbol,24);
+      try {return send(res,200,evaluateTrainedVolatility(bars));}
+      catch(e) {
+        if(["GAPPED_SERIES","INSUFFICIENT_HISTORY"].includes(e.message))return send(res,422,{
+          error:e.message,availableMinutes:bars.length,
+          message:"Real continuous one-minute observations are required for training and holdout evaluation."
+        });
+        throw e;
+      }
     }
     if (path === "/api/v1/models/volatility") {
       if(!hasDatabase()) return send(res,503,{error:"MODEL_HISTORY_NOT_CONFIGURED"});

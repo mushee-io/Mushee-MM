@@ -150,3 +150,33 @@ test("licensed quote route is protected and never returns synthetic prices",asyn
     if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
   }
 });
+
+
+test("trained volatility endpoint does not invent observations without a database",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const response=await fetch(base+"/api/v1/models/volatility-ml?symbol=BTC-USD");
+      assert.equal(response.status,503);
+      assert.equal((await response.json()).error,"MODEL_HISTORY_NOT_CONFIGURED");
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});
+test("customer billing cannot be read without valid tenant credentials",async()=>{
+  const oldDb=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const response=await fetch(base+"/api/v1/account/billing-preview?month=2026-09");
+      assert.equal(response.status,403);
+      assert.equal((await response.json()).error,"TENANT_ACCOUNT_REQUIRED");
+    });
+  } finally {
+    if(oldDb===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDb;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});

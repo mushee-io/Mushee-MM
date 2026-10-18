@@ -5,6 +5,7 @@ import { normaliseCoinbase, normaliseKraken, coinbaseSubscribe, krakenSubscribe,
 import { insertTicks, closePool, hasDatabase } from "../lib/storage.js";
 import { aggregateTicker } from "../lib/analytics.js";
 import { selectFreshSources } from "../lib/quality.js";
+import { makeSequenceTracker } from "../lib/sequences.js";
 
 const port = Number(process.env.STREAM_PORT || 3001);
 const sources = [
@@ -21,6 +22,7 @@ let droppedTicks = 0;
 let running = true;
 let flushing = false;
 const upstreamConnections = new Set();
+const sequencing = makeSequenceTracker();
 
 function json(res, status, data) {
   res.writeHead(status, { "Content-Type":"application/json", "Cache-Control":"no-store" });
@@ -39,6 +41,7 @@ function broadcast(data) {
 }
 function processTick(tick) {
   if (!running || selectFreshSources([tick]).accepted.length !== 1) return;
+  if (!sequencing.observe(tick).accept) return;
   latest.set(tick.symbol + ":" + tick.provider, tick);
   if (hasDatabase()) {
     if (tickBuffer.length >= MAX_QUEUE) droppedTicks++;
@@ -87,6 +90,7 @@ function connectUpstream(source) {
     const socket = new WebSocket(source.url,{perMessageDeflate:false,handshakeTimeout:10000});
     upstreamConnections.add(socket);
     socket.on("open",() => {
+      sequencing.resetProvider(source.name);
       retries = 0; lastMessageAt = Date.now(); state.connected = true;
       socket.send(JSON.stringify(source.subscribe()));
       console.log("[stream] subscribed to "+source.name);
@@ -128,6 +132,7 @@ const httpServer = createServer((req,res) => {
   if (url.pathname === "/healthz") return json(res,200,{
     service:"mushee-stream",running,databaseConfigured:hasDatabase(),sources:sourceState,
     connectedClients:clients.size,tickQueueSize:tickBuffer.length,droppedTicks,
+    sequenceObservations:sequencing.counters,
     note:"Process status only. Source connectivity is reported separately."
   });
   return json(res,404,{error:"NOT_FOUND"});

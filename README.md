@@ -18,6 +18,30 @@ Milestone 5 now has a **fail-closed adapter and tenant entitlement framework** f
 
 **This is a vendor adapter, NOT a live equities/FX/RWA data product or proof that the data has been licensed.**
 
+
+## Milestone 3 — Trained, benchmarked statistical ML
+
+New `GET /api/v1/models/volatility-ml?symbol=BTC-USD` trains a regularised linear regression model (ridge) from real continuous 1-minute observations. Features are derived from trailing returns; forward realised volatility is the target. It evaluates a chronological 70/30 holdout using nonoverlapping future windows, compares its RMSE and MAE against a naive trailing-volatility predictor, reports both, and NEVER claims it beat the baseline unless the metric supports that result.
+
+The algorithm is **supervised statistical machine learning**, not a transformer or external AI service. It returns an honest error when no live collected observations are available. It is research-only and not a profitable-trading guarantee.
+
+## Milestone 6 — Institutional billing foundations
+
+New internal `tenant_billing_pricing` and `billing_drafts` tables and three functions support explicitly configured USD-cent contract rates, included requests, overage pricing rounded up per thousand requests, previous-month draft idempotency and a self-service *read-only* account view:
+
+- `GET /api/v1/account/billing-preview?month=YYYY-MM` shows the current tenant's estimated usage bill, only when an operator has configured its pricing.
+- `GET /api/v1/account/billing-drafts` shows draft records for the authenticated tenant.
+- `npm run billing -- configure --tenantId=UUID --baseCents=10000 --included=100000 --overagePerThousandCents=20 --terms=SIGNED_CONTRACT_REFERENCE` configures a manually verified commercial agreement.
+- `npm run billing -- draft --tenantId=UUID --month=2026-09` creates a past-month internal draft once. It neither charges money nor sends invoices.
+
+**Not built:** card payments, invoice issuance, taxation, discounts, discounts/VAT accounting, customer onboarding UX and payment collection. Do not invoice using estimated billing data without finance/legal review.
+
+## Milestone 2 — Improved collector recovery and local deployment
+
+Stream deduplication now discards observed backward/duplicate Coinbase product sequences, resets after source reconnect and reports observed sequence jumps without falsely claiming skipped ticker messages. Streaming health and readiness endpoints are available. The `compose.dev.yml` file starts a localhost-only PostgreSQL, migrations, REST API and streaming collector for integration testing. See `docs/deployment.md`.
+
+**Production deployment is not automatically completed by Dockerfiles or successful GitHub CI**. Always-on collector hosting, SSL, real provider connectivity, licensed data access and independent publisher operators still require live infrastructure.
+
 ## Milestone 3 Research / Milestone 4 Publisher Prototype / Enterprise API
 
 **New research endpoint:** `GET /api/v1/models/volatility?symbol=BTC-USD` reads stored real one-minute median ticks, requires continuous observed history and computes an EWMA volatility forecast with historical rolling out-of-sample evaluation against a trailing-variance baseline. This is **a reproducible statistical research baseline, NOT a validated predictive AI model**. It returns 503 without a database and 422 for missing/insufficient history.

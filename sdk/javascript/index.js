@@ -41,6 +41,9 @@ export class MusheeClient {
   ticks(symbol,limit=100){return this.get("/api/v1/ticks",{symbol,limit});}
   intelligence(symbol){return this.get("/api/v1/intelligence",{symbol});}
   volatility(symbol){return this.get("/api/v1/models/volatility",{symbol});}
+  trainedVolatility(symbol){return this.get("/api/v1/models/volatility-ml",{symbol});}
+  billingPreview(month){return this.get("/api/v1/account/billing-preview",{month});}
+  billingDrafts(){return this.get("/api/v1/account/billing-drafts");}
   oracle(symbol){return this.get("/api/v1/oracle/consensus",{symbol});}
   usage(days=30){return this.get("/api/v1/account/usage",{days});}
   licensedCatalog(){return this.get("/api/v1/licensed/catalog");}
