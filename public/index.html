@@ -78,7 +78,22 @@
     pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.9;margin:0;padding:17px;color:#c4f0dc}
     .note{font-size:12px;color:var(--muted);margin:20px 0}
     .footer{border-top:1px solid #253e4b;padding:24px 0 40px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    @media(max-width:780px){.nav{gap:12px}.nav a:nth-child(1){display:none}.hero{padding:55px 0 43px}.console-body{grid-template-columns:1fr}.chart-area{border-right:none;border-bottom:1px solid var(--line)}.cards,.docs-grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.wrap{padding:0 18px}}
+    @media(max-width:780px){.nav{gap:12px}.nav a:nth-child(2),.nav a:nth-child(3){display:none}.hero{padding:55px 0 43px}.console-body{grid-template-columns:1fr}.chart-area{border-right:none;border-bottom:1px solid var(--line)}.cards,.docs-grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.wrap{padding:0 18px}}
+    .market-hub{margin:0 0 65px;scroll-margin-top:16px}
+    .market-intro{font-size:13px;line-height:1.7;color:var(--muted);max-width:800px;margin:0 0 22px}
+    .market-hub-link{display:inline-flex;align-items:center;border:1px solid #4a7764;background:#17392d;color:#c0f4b2;font-weight:800;padding:11px 16px;border-radius:10px;font-size:13px;white-space:nowrap}
+    .market-hub-link:hover{background:#1b4a38;text-decoration:none}
+    .market-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+    .market-tile{display:flex;flex-direction:column;min-height:170px;padding:20px;border:1px solid #315342;border-radius:14px;background:linear-gradient(150deg,#162c26,#0c241e);gap:5px;transition:border-color .15s,transform .15s}
+    .market-tile:hover{border-color:#b0ebad;transform:translateY(-2px);text-decoration:none}
+    .market-symbol{font-size:22px;color:var(--bright);margin-bottom:6px}
+    .market-tile strong{font-size:16px;line-height:1.3;letter-spacing:-.02em}
+    .market-count{font-weight:750;font-size:12px;color:#caefbe}
+    .market-tile small{font-size:11px;color:#a6c2b1;margin-top:auto}
+    .market-disclaimer{font-size:11px;color:var(--muted);line-height:1.65;margin:15px 0 0}
+    @media(max-width:1050px){.market-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:780px){.market-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.market-hub-link{white-space:normal}.market-tile{min-height:152px;padding:15px}.nav a:nth-child(1){display:inline}}
+    @media(max-width:420px){.market-grid{grid-template-columns:1fr 1fr;gap:9px}.market-tile strong{font-size:14px}.market-tile small{font-size:10px}}
   </style>
 </head>
 <body>
@@ -92,6 +107,24 @@
       <h1>Market intelligence.<br><span>Built for what comes next.</span></h1>
       <p class="lead">Real market data, liquidity analytics and machine-readable intelligence. One API for trading platforms, risk engines and financial AI agents.</p>
       <div class="pills"><a class="pill" href="/explore" style="font-weight:800;border-color:#9decad">↗ EXPLORE 7 ASSET CLASSES</a><span class="pill">MULTI-SOURCE PRICING</span><span class="pill">ORDER-BOOK LIQUIDITY</span><span class="pill">HISTORICAL OHLCV</span><span class="pill">AI-READY API</span></div>
+    </section>
+
+    <section id="markets" class="market-hub" aria-labelledby="market-heading">
+      <div class="section-head">
+        <div><div class="eyebrow">EXPLORE MUSHEE FEEDS</div><h2 id="market-heading">Discover every asset class.</h2></div>
+        <a class="market-hub-link" href="/explore">Open full market explorer →</a>
+      </div>
+      <p class="market-intro">Browse our 128-instrument directory across seven financial markets. Three crypto pairs have exchange connectors; all other instruments are clearly marked as planned until authorised data sources are available.</p>
+      <div class="market-grid">
+        <a class="market-tile" href="/explore?category=indices"><span class="market-symbol">↗</span><strong>Indices</strong><span class="market-count">12 instruments</span><small>Data integration planned</small></a>
+        <a class="market-tile" href="/explore?category=metals"><span class="market-symbol">◆</span><strong>Precious Metals</strong><span class="market-count">8 instruments</span><small>Data integration planned</small></a>
+        <a class="market-tile" href="/explore?category=crypto"><span class="market-symbol">₿</span><strong>Crypto</strong><span class="market-count">22 instruments</span><small>3 exchange-connected pairs</small></a>
+        <a class="market-tile" href="/explore?category=equities"><span class="market-symbol">▥</span><strong>Equities</strong><span class="market-count">32 instruments</span><small>Licensed provider needed</small></a>
+        <a class="market-tile" href="/explore?category=fx"><span class="market-symbol">⇄</span><strong>FX</strong><span class="market-count">20 instruments</span><small>Licensed provider needed</small></a>
+        <a class="market-tile" href="/explore?category=commodities"><span class="market-symbol">◈</span><strong>Commodities</strong><span class="market-count">20 instruments</span><small>Licensed provider needed</small></a>
+        <a class="market-tile" href="/explore?category=rates"><span class="market-symbol">%</span><strong>Interest Rates &amp; Yields</strong><span class="market-count">14 instruments</span><small>Licensed provider needed</small></a>
+      </div>
+      <p class="market-disclaimer">Directory entries are not live price feeds. Quotes are displayed only when a connected provider actually returns valid market data.</p>
     </section>
 
     <section id="terminal">

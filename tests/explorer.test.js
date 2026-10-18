@@ -83,3 +83,14 @@ test("responsive explorer and direct navigation are published",async()=>{
   assert.ok(server.includes('pathname === "/explore"'));
   assert.ok(vercel.rewrites.some(x=>x.source==="/explore"));
 });
+
+test("homepage visibly exposes all seven feed sections with working deep links",async()=>{
+  const home=await readFile(new URL("../public/index.html",import.meta.url),"utf8");
+  for(const category of ["indices","metals","crypto","equities","fx","commodities","rates"]){
+    assert.ok(home.includes('href="/explore?category='+category+'"'),"missing homepage category "+category);
+  }
+  assert.ok(home.includes('id="markets"'));
+  assert.ok(home.includes('href="/explore"'));
+  assert.ok(home.includes("128-instrument directory"));
+  assert.ok(home.includes("Directory entries are not live price feeds"));
+});
