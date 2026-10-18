@@ -43,4 +43,6 @@ export class MusheeClient {
   volatility(symbol){return this.get("/api/v1/models/volatility",{symbol});}
   oracle(symbol){return this.get("/api/v1/oracle/consensus",{symbol});}
   usage(days=30){return this.get("/api/v1/account/usage",{days});}
+  licensedCatalog(){return this.get("/api/v1/licensed/catalog");}
+  licensedQuote(assetClass,symbol){return this.get("/api/v1/licensed/quote",{assetClass,symbol});}
 }

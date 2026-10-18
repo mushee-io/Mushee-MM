@@ -134,3 +134,19 @@ test("account usage needs real database tenant credentials",async()=>{
     if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
   }
 });
+
+
+test("licensed quote route is protected and never returns synthetic prices",async()=>{
+  const oldDB=process.env.DATABASE_URL,oldKey=process.env.API_KEY;
+  delete process.env.DATABASE_URL;delete process.env.API_KEY;
+  try {
+    await withServer(async(base)=>{
+      const response=await fetch(base+"/api/v1/licensed/quote?assetClass=equity&symbol=AAPL");
+      assert.equal(response.status,403);
+      assert.equal((await response.json()).error,"TENANT_ACCOUNT_REQUIRED");
+    });
+  } finally {
+    if(oldDB===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=oldDB;
+    if(oldKey===undefined)delete process.env.API_KEY;else process.env.API_KEY=oldKey;
+  }
+});

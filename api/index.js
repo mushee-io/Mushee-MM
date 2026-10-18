@@ -3,6 +3,7 @@ import { recentTicks, hasDatabase, minuteMedianPriceSeries, selfUsage } from "..
 import { submitOracleReport, readOracleConsensus } from "../lib/oracle-storage.js";
 import { AttestationError } from "../lib/oracle.js";
 import { evaluateVolatility } from "../lib/volatility.js";
+import { configuredAssets, isLicensedEntitled, getLicensedQuote } from "../lib/licensed.js";
 import { listMarkets, resolveMarket, boundedNumber } from "../lib/catalog.js";
 import { getPrice, getOrderBook, getLiquidity, getHistory, getIntelligence, getExecutionIntelligence } from "../lib/market.js";
 import { generateCommentary } from "../lib/ai.js";
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
 
   if (req.method==="GET" && path === "/api/v1/health") {
     return send(res, 200, {
-      service: "Mushee Market Data Network", status: "running", version: "0.4.0",
+      service: "Mushee Market Data Network", status: "running", version: "0.5.0",
       startedAt: STARTED, upstreamChecked: false,
       note: "Health confirms the API process is running, not upstream availability."
     });
@@ -73,7 +74,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const scope = path === "/api/v1/price" || path === "/api/v1/oracle/consensus" ? "price" :
+    const scope = ["/api/v1/price","/api/v1/oracle/consensus","/api/v1/licensed/quote","/api/v1/licensed/catalog"].includes(path) ? "price" :
       ["/api/v1/orderbook","/api/v1/liquidity","/api/v1/execution-intelligence"].includes(path) ? "depth" :
       ["/api/v1/history","/api/v1/ticks"].includes(path) ? "history" :
       ["/api/v1/intelligence","/api/v1/models/volatility"].includes(path) ? "intelligence" :
@@ -91,7 +92,7 @@ export default async function handler(req, res) {
     "/api/v1/price", "/api/v1/orderbook", "/api/v1/liquidity",
     "/api/v1/history", "/api/v1/intelligence", "/api/v1/ticks", "/api/v1/execution-intelligence",
     "/api/v1/models/volatility", "/api/v1/oracle/consensus", "/api/v1/account/usage",
-    "/api/v1/oracle/reports"
+    "/api/v1/oracle/reports", "/api/v1/licensed/quote", "/api/v1/licensed/catalog"
   ]);
   if (!endpoints.has(path)) {
     return send(res, 404, { error: "NOT_FOUND", endpoints: [
@@ -115,6 +116,28 @@ export default async function handler(req, res) {
     }
   }
   if(req.method!=="GET") return send(res,405,{error:"METHOD_NOT_ALLOWED"});
+  if(path === "/api/v1/licensed/catalog") {
+    if(!hasDatabase() || !req.authorisedTenant) return send(res,403,{error:"TENANT_ACCOUNT_REQUIRED"});
+    try {return send(res,200,{assets:configuredAssets(),kind:"operator-configured-catalog",
+      warning:"Listing does not itself confirm commercial rights or tenant entitlements."});}
+    catch {return send(res,503,{error:"LICENSED_VENDOR_CONFIGURATION_INVALID"});}
+  }
+  if(path === "/api/v1/licensed/quote") {
+    if(!hasDatabase() || !req.authorisedTenant) return send(res,403,{error:"TENANT_ACCOUNT_REQUIRED"});
+    const assetClass=url.searchParams.get("assetClass");
+    const symbol=url.searchParams.get("symbol");
+    if(typeof assetClass!=="string" || typeof symbol!=="string" ||
+      !/^[A-Za-z]+$/.test(assetClass) || !/^[A-Z0-9][A-Z0-9.:/_-]{0,39}$/.test(symbol)) {
+      return send(res,400,{error:"INVALID_ASSET_REQUEST"});
+    }
+    try {
+      if(!(await isLicensedEntitled(req.authorisedTenant,assetClass,symbol))) {
+        return send(res,403,{error:"ASSET_NOT_ENTITLED"});
+      }
+      const response=await getLicensedQuote(assetClass,symbol);
+      return send(res,response.status,response.data||{error:response.error});
+    } catch {return send(res,503,{error:"LICENSED_PROVIDER_UNAVAILABLE"});}
+  }
   if(path === "/api/v1/account/usage") {
     if(!hasDatabase() || !req.authorisedTenant) return send(res,403,{error:"TENANT_ACCOUNT_REQUIRED"});
     const days=boundedNumber(url.searchParams.get("days"),30,1,90);

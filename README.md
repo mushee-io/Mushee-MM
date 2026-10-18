@@ -5,6 +5,19 @@ AI-ready, blockchain-independent institutional market-data API from Mushee. **Mi
 **Status: development MVP. Not a production-grade oracle, licensed data redistribution service, regulated benchmark or decentralised validator network. Do not use it to settle positions or liquidate collateral.**
 
 
+
+## Licensed multi-asset vendor gateway — adapter only
+
+Milestone 5 now has a **fail-closed adapter and tenant entitlement framework** for equities, FX, commodities, bonds, derivatives and RWAs. No commercial asset prices are included or fabricated by default. Operators must negotiate real vendor access, ensure redistribution is permitted, and configure a compatible gateway.
+
+- Set `LICENSED_ASSET_CATALOG` to an operator-owned JSON catalog, such as `[ {"assetClass":"equity","symbol":"AAPL","currency":"USD"} ]`. The catalog is not populated unless configured.
+- Set a HTTPS `LICENSED_PROVIDER_BASE_URL` and private `LICENSED_PROVIDER_TOKEN` for an authorised vendor integration that implements `/quote?assetClass=equity&symbol=AAPL` and returns `{assetClass,symbol,currency,price,asOf,source}`.
+- Run migrations including SQL 004, and grant each tenant explicit instrument rights with `npm run asset:grant -- --tenantId=UUID --assetClass=equity --symbol=AAPL`.
+- `GET /api/v1/licensed/quote?assetClass=equity&symbol=AAPL` requires a database-backed tenant with the `price` scope and an explicit instrument grant. Without a configured, reachable, lawful vendor, it returns an error rather than synthetic values.
+- `GET /api/v1/licensed/catalog` lists only operator-configured instrument identifiers, not prices, with a warning that contract rights must be checked separately.
+
+**This is a vendor adapter, NOT a live equities/FX/RWA data product or proof that the data has been licensed.**
+
 ## Milestone 3 Research / Milestone 4 Publisher Prototype / Enterprise API
 
 **New research endpoint:** `GET /api/v1/models/volatility?symbol=BTC-USD` reads stored real one-minute median ticks, requires continuous observed history and computes an EWMA volatility forecast with historical rolling out-of-sample evaluation against a trailing-variance baseline. This is **a reproducible statistical research baseline, NOT a validated predictive AI model**. It returns 503 without a database and 422 for missing/insufficient history.

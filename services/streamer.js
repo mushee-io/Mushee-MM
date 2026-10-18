@@ -4,6 +4,7 @@ import { authorise, presentedApiKey } from "../lib/auth.js";
 import { normaliseCoinbase, normaliseKraken, coinbaseSubscribe, krakenSubscribe, parseSubscription } from "../lib/streaming.js";
 import { insertTicks, closePool, hasDatabase } from "../lib/storage.js";
 import { aggregateTicker } from "../lib/analytics.js";
+import { selectFreshSources } from "../lib/quality.js";
 
 const port = Number(process.env.STREAM_PORT || 3001);
 const sources = [
@@ -37,19 +38,16 @@ function broadcast(data) {
   }
 }
 function processTick(tick) {
-  if (!running || !Number.isFinite(tick.last) || tick.last <= 0) return;
-  if (tick.sourceTime) {
-    const age = Date.now() - Date.parse(tick.sourceTime);
-    if (age < -30000 || age > 120000) return;
-  }
+  if (!running || selectFreshSources([tick]).accepted.length !== 1) return;
   latest.set(tick.symbol + ":" + tick.provider, tick);
   if (hasDatabase()) {
     if (tickBuffer.length >= MAX_QUEUE) droppedTicks++;
     else tickBuffer.push(tick);
   }
   broadcast({type:"ticker",...tick});
-  const current = ["coinbase","kraken"].map((provider) => latest.get(tick.symbol + ":" + provider))
-    .filter((item) => item && freshnessMs(item) < 20000);
+  const observed = ["coinbase","kraken"].map((provider) => latest.get(tick.symbol + ":" + provider))
+    .filter(Boolean);
+  const current = selectFreshSources(observed).accepted;
   if (!current.length) return;
   const ref = aggregateTicker(current, tick.symbol);
   broadcast({
@@ -118,6 +116,15 @@ function connectUpstream(source) {
 
 const httpServer = createServer((req,res) => {
   const url = new URL(req.url || "/", "http://localhost");
+  if (url.pathname === "/readyz") {
+    const coverage = ["BTC-USD","ETH-USD","SOL-USD"].map(symbol=>{
+      const ticks=["coinbase","kraken"].map(provider=>latest.get(symbol+":"+provider)).filter(Boolean);
+      return {symbol,freshSources:selectFreshSources(ticks).accepted.length};
+    });
+    const ready=coverage.every(x=>x.freshSources>=2);
+    return json(res,ready?200:503,{ready,coverage,
+      warning:"Availability depends on real, independent exchange observations; no synthetic fallback."});
+  }
   if (url.pathname === "/healthz") return json(res,200,{
     service:"mushee-stream",running,databaseConfigured:hasDatabase(),sources:sourceState,
     connectedClients:clients.size,tickQueueSize:tickBuffer.length,droppedTicks,
